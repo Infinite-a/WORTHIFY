@@ -517,10 +517,61 @@
 
       <!-- Results Section -->
       <div id="results-section" class="hidden space-y-6">
-        <!-- Verdict Banner -->
+
+        <!-- ── Verdict Banner ── -->
         <div id="verdict-banner" class="verdict-banner"></div>
 
-        <!-- Top Row: Quality Score + Price Intel + Sentiment -->
+        <!-- ── Product Info Card (Description + Specs + Buy Links) ── -->
+        <div id="product-info-card" class="hidden dash-card">
+          <div class="flex items-start justify-between mb-4 gap-4 flex-wrap">
+            <div class="flex items-center gap-3">
+              <div id="product-icon-bg" class="w-12 h-12 rounded-2xl bg-blue-500/20 border border-blue-500/30 flex items-center justify-center flex-shrink-0">
+                <i id="product-cat-icon" class="fas fa-box text-blue-400 text-xl"></i>
+              </div>
+              <div>
+                <div class="flex items-center gap-2 flex-wrap">
+                  <h2 id="product-title-name" class="text-lg font-black text-white capitalize"></h2>
+                  <span id="product-brand-badge" class="text-xs px-2 py-0.5 bg-blue-500/20 text-blue-300 rounded-full capitalize hidden"></span>
+                  <span id="product-cat-badge" class="text-xs px-2 py-0.5 bg-slate-700 text-slate-400 rounded-full capitalize"></span>
+                </div>
+                <div class="flex items-center gap-3 mt-1 flex-wrap">
+                  <span class="text-xs text-slate-500">MRP: <span id="product-mrp-val" class="text-white font-bold"></span></span>
+                  <span class="text-xs text-green-400" id="product-savings-label"></span>
+                  <span class="text-xs text-slate-500 flex items-center gap-1">
+                    <span class="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse inline-block"></span>
+                    Live FX: 1 USD = ₹<span id="product-fx-rate"></span>
+                  </span>
+                </div>
+              </div>
+            </div>
+            <!-- Buy links -->
+            <div id="product-buy-links" class="flex flex-wrap gap-2"></div>
+          </div>
+
+          <!-- Description -->
+          <p id="product-description" class="text-sm text-slate-300 leading-relaxed mb-4 hidden"></p>
+
+          <!-- Key Highlights -->
+          <div id="product-highlights-wrap" class="hidden mb-4">
+            <div class="text-xs text-slate-500 uppercase tracking-widest mb-2">Key Highlights</div>
+            <div id="product-highlights" class="flex flex-wrap gap-2"></div>
+          </div>
+
+          <!-- Specs tabs -->
+          <div id="product-specs-wrap" class="hidden">
+            <div class="flex items-center justify-between mb-3">
+              <div class="text-xs text-slate-500 uppercase tracking-widest">Full Specifications</div>
+              <button onclick="toggleSpecs()" id="specs-toggle-btn" class="text-xs text-blue-400 hover:text-blue-300 transition-colors">
+                <i class="fas fa-chevron-down mr-1" id="specs-chevron"></i>Show Specs
+              </button>
+            </div>
+            <div id="specs-table-wrap" class="hidden">
+              <div id="specs-table" class="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-1.5 text-xs"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ── Top Row: Quality Score + Price Intel + Sentiment ── -->
         <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
           <!-- Quality Score -->
           <div class="metric-card">
@@ -552,11 +603,11 @@
             <div class="text-xs text-slate-500 uppercase tracking-widest mb-3">Price Intelligence</div>
             <div class="space-y-2.5">
               <div class="flex justify-between items-center">
-                <span class="text-slate-400 text-xs">Lowest Price</span>
+                <span class="text-slate-400 text-xs">Lowest Online Price</span>
                 <span class="font-bold text-green-400 text-sm" id="price-min">--</span>
               </div>
               <div class="flex justify-between items-center">
-                <span class="text-slate-400 text-xs">Average Price</span>
+                <span class="text-slate-400 text-xs">Average Online Price</span>
                 <span class="font-bold text-white text-sm" id="price-avg">--</span>
               </div>
               <div class="flex justify-between items-center">
@@ -575,28 +626,31 @@
 
           <!-- Sentiment Summary -->
           <div class="metric-card">
-            <div class="text-xs text-slate-500 uppercase tracking-widest mb-3">Sentiment Analysis</div>
+            <div class="flex items-center gap-2 mb-3">
+              <i class="fas fa-brain text-purple-400 text-xs"></i>
+              <div class="text-xs text-slate-500 uppercase tracking-widest">Sentiment Analysis</div>
+            </div>
             <div class="space-y-2.5">
               <div>
                 <div class="flex justify-between text-xs mb-1">
                   <span class="text-green-400"><i class="fas fa-smile mr-1"></i>Positive</span>
-                  <span class="text-green-400" id="pos-pct">--</span>
+                  <span class="text-green-400 font-bold" id="pos-pct">--</span>
                 </div>
-                <div class="h-1.5 bg-slate-800 rounded-full"><div id="pos-bar" class="h-full bg-green-500 rounded-full" style="width:0%"></div></div>
+                <div class="h-1.5 bg-slate-800 rounded-full"><div id="pos-bar" class="h-full bg-green-500 rounded-full transition-all duration-700" style="width:0%"></div></div>
               </div>
               <div>
                 <div class="flex justify-between text-xs mb-1">
                   <span class="text-slate-400"><i class="fas fa-meh mr-1"></i>Neutral</span>
-                  <span class="text-slate-400" id="neu-pct">--</span>
+                  <span class="text-slate-400 font-bold" id="neu-pct">--</span>
                 </div>
-                <div class="h-1.5 bg-slate-800 rounded-full"><div id="neu-bar" class="h-full bg-slate-500 rounded-full" style="width:0%"></div></div>
+                <div class="h-1.5 bg-slate-800 rounded-full"><div id="neu-bar" class="h-full bg-slate-500 rounded-full transition-all duration-700" style="width:0%"></div></div>
               </div>
               <div>
                 <div class="flex justify-between text-xs mb-1">
                   <span class="text-red-400"><i class="fas fa-frown mr-1"></i>Negative</span>
-                  <span class="text-red-400" id="neg-pct">--</span>
+                  <span class="text-red-400 font-bold" id="neg-pct">--</span>
                 </div>
-                <div class="h-1.5 bg-slate-800 rounded-full"><div id="neg-bar" class="h-full bg-red-500 rounded-full" style="width:0%"></div></div>
+                <div class="h-1.5 bg-slate-800 rounded-full"><div id="neg-bar" class="h-full bg-red-500 rounded-full transition-all duration-700" style="width:0%"></div></div>
               </div>
               <div class="pt-1 border-t border-slate-800 flex justify-between text-xs">
                 <span class="text-slate-500">Reviews Analyzed</span>
@@ -606,18 +660,70 @@
           </div>
         </div>
 
-        <!-- Aspect Analysis -->
+        <!-- ── Dedicated Sentiment Analysis Section ── -->
         <div class="dash-card">
           <h3 class="text-sm font-bold text-white mb-4 flex items-center gap-2">
-            <i class="fas fa-layer-group text-blue-400"></i> Aspect Analysis
+            <i class="fas fa-brain text-purple-400"></i> Sentiment Analysis Engine
+            <span class="ml-1 text-xs px-2 py-0.5 bg-purple-500/20 text-purple-300 rounded-full">VADER + TextBlob NLP</span>
+            <span class="ml-auto text-xs text-slate-500 font-normal" id="sentiment-label-display"></span>
           </h3>
-          <div id="aspects-grid" class="grid grid-cols-2 md:grid-cols-3 gap-3"></div>
+          <!-- Sentiment Overview Row -->
+          <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-5">
+            <div class="bg-slate-800/50 rounded-xl p-4 text-center border border-green-500/20">
+              <div class="text-3xl font-black text-green-400" id="sent-pos-big">--</div>
+              <div class="text-xs text-slate-500 mt-1">Positive Reviews</div>
+              <div class="w-full h-1.5 bg-slate-700 rounded-full mt-2 overflow-hidden">
+                <div id="sent-pos-bar2" class="h-full bg-green-500 rounded-full transition-all duration-700" style="width:0%"></div>
+              </div>
+            </div>
+            <div class="bg-slate-800/50 rounded-xl p-4 text-center border border-slate-600/20">
+              <div class="text-3xl font-black text-slate-400" id="sent-neu-big">--</div>
+              <div class="text-xs text-slate-500 mt-1">Neutral Reviews</div>
+              <div class="w-full h-1.5 bg-slate-700 rounded-full mt-2 overflow-hidden">
+                <div id="sent-neu-bar2" class="h-full bg-slate-500 rounded-full transition-all duration-700" style="width:0%"></div>
+              </div>
+            </div>
+            <div class="bg-slate-800/50 rounded-xl p-4 text-center border border-red-500/20">
+              <div class="text-3xl font-black text-red-400" id="sent-neg-big">--</div>
+              <div class="text-xs text-slate-500 mt-1">Negative Reviews</div>
+              <div class="w-full h-1.5 bg-slate-700 rounded-full mt-2 overflow-hidden">
+                <div id="sent-neg-bar2" class="h-full bg-red-500 rounded-full transition-all duration-700" style="width:0%"></div>
+              </div>
+            </div>
+            <div class="bg-slate-800/50 rounded-xl p-4 text-center border border-blue-500/20">
+              <div class="text-3xl font-black text-blue-400" id="sent-score-big">--</div>
+              <div class="text-xs text-slate-500 mt-1">Sentiment Score /100</div>
+              <div class="text-xs text-slate-600 mt-1" id="sent-polarity-display"></div>
+            </div>
+          </div>
+          <!-- Aspect Analysis -->
+          <div class="mb-1">
+            <div class="text-xs text-slate-500 uppercase tracking-widest mb-3">Aspect-Level Sentiment Breakdown</div>
+            <div id="aspects-grid" class="grid grid-cols-2 md:grid-cols-3 gap-3"></div>
+          </div>
         </div>
 
-        <!-- Live Telemetry Grid -->
+        <!-- ── Sentiment Doughnut + Aspect Chart ── -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div class="dash-card">
+            <h3 class="text-sm font-bold text-white mb-4 flex items-center gap-2">
+              <i class="fas fa-chart-pie text-purple-400"></i> Sentiment Distribution
+            </h3>
+            <canvas id="sentimentChart" height="200"></canvas>
+          </div>
+          <div class="dash-card">
+            <h3 class="text-sm font-bold text-white mb-4 flex items-center gap-2">
+              <i class="fas fa-chart-bar text-blue-400"></i> Price Comparison (Online Platforms)
+            </h3>
+            <canvas id="priceChart" height="200"></canvas>
+          </div>
+        </div>
+
+        <!-- ── Live Telemetry Grid (Online Platforms) ── -->
         <div class="dash-card overflow-hidden">
           <h3 class="text-sm font-bold text-white mb-4 flex items-center gap-2">
-            <i class="fas fa-table text-blue-400"></i> Live Telemetry Grid
+            <i class="fas fa-table text-blue-400"></i> Online Platform Price Intelligence
+            <span class="ml-1 text-xs px-2 py-0.5 bg-blue-500/20 text-blue-300 rounded-full">Click row to buy</span>
             <span class="ml-auto text-xs text-slate-500 font-normal" id="telemetry-timestamp"></span>
           </h3>
           <div class="overflow-x-auto">
@@ -638,42 +744,56 @@
           </div>
         </div>
 
-        <!-- Chart Row -->
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div class="dash-card">
-            <h3 class="text-sm font-bold text-white mb-4 flex items-center gap-2">
-              <i class="fas fa-chart-bar text-blue-400"></i> Price Comparison
-            </h3>
-            <canvas id="priceChart" height="200"></canvas>
+        <!-- ── Online vs Offline Price Comparison ── -->
+        <div class="dash-card">
+          <h3 class="text-sm font-bold text-white mb-4 flex items-center gap-2">
+            <i class="fas fa-store text-amber-400"></i> Online vs Offline Price Comparison
+            <span class="ml-1 text-xs px-2 py-0.5 bg-amber-500/20 text-amber-300 rounded-full">Retail Stores India</span>
+          </h3>
+          <!-- Summary strip -->
+          <div id="offline-summary-strip" class="hidden mb-4 p-3 rounded-xl bg-slate-800/60 border border-amber-500/20 flex flex-wrap gap-4 items-center text-sm">
+            <div class="flex items-center gap-2">
+              <i class="fas fa-wifi text-blue-400"></i>
+              <span class="text-slate-400 text-xs">Best Online:</span>
+              <span class="font-black text-green-400" id="compare-online-best">--</span>
+            </div>
+            <div class="flex items-center gap-2">
+              <i class="fas fa-store text-amber-400"></i>
+              <span class="text-slate-400 text-xs">Best Offline:</span>
+              <span class="font-black text-amber-300" id="compare-offline-best">--</span>
+            </div>
+            <div class="flex items-center gap-2">
+              <i class="fas fa-piggy-bank text-purple-400"></i>
+              <span id="compare-recommendation" class="text-xs font-semibold"></span>
+            </div>
           </div>
-          <div class="dash-card">
-            <h3 class="text-sm font-bold text-white mb-4 flex items-center gap-2">
-              <i class="fas fa-chart-pie text-purple-400"></i> Sentiment Distribution
-            </h3>
-            <canvas id="sentimentChart" height="200"></canvas>
+          <!-- Offline store cards -->
+          <div id="offline-stores-grid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+            <div class="text-slate-500 text-sm col-span-3 text-center py-4">
+              <i class="fas fa-spinner fa-spin mr-2"></i>Loading offline store prices...
+            </div>
           </div>
         </div>
 
-        <!-- Product Meta Bar -->
-        <div id="product-meta-bar" class="hidden px-4 py-3 bg-slate-800/60 border border-slate-700/50 rounded-xl text-xs"></div>
-
-        <!-- Product Cards Grid -->
+        <!-- ── Product Cards Grid ── -->
         <div class="dash-card">
           <h3 class="text-sm font-bold text-white mb-4 flex items-center gap-2">
-            <i class="fas fa-boxes text-blue-400"></i> Product Overview
-            <span class="ml-2 text-xs text-slate-500 font-normal">Sorted by price • click to view on platform</span>
+            <i class="fas fa-boxes text-blue-400"></i> Product Listings
+            <span class="ml-2 text-xs text-slate-500 font-normal">Sorted by price • click to buy</span>
           </h3>
           <div id="products-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"></div>
         </div>
 
-        <!-- Sentiment Snippets -->
+        <!-- ── Sentiment Snippets (Customer Voices) ── -->
         <div class="dash-card">
-          <h3 class="text-sm font-bold text-white mb-4 flex items-center gap-2">
-            <i class="fas fa-quote-left text-blue-400"></i> Sentiment Snippets
-            <span class="ml-2 text-xs text-slate-500">Representative customer voices</span>
+          <h3 class="text-sm font-bold text-white mb-1 flex items-center gap-2">
+            <i class="fas fa-comments text-purple-400"></i> Customer Voices
+            <span class="ml-1 text-xs px-2 py-0.5 bg-purple-500/20 text-purple-300 rounded-full">NLP-extracted review sentiments</span>
           </h3>
+          <p class="text-xs text-slate-500 mb-4">Real customer reviews analyzed by VADER + TextBlob NLP engine — each snippet is scored for sentiment polarity</p>
           <div id="snippets-grid" class="grid grid-cols-1 md:grid-cols-2 gap-3"></div>
         </div>
+
       </div>
     </div>
 

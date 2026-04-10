@@ -259,46 +259,132 @@ function renderResults(data) {
   renderQualityScore(data.quality_score);
   renderPriceIntel(data.price_intel);
   renderSentimentSummary(data.sentiment);
+  renderSentimentSection(data.sentiment);
   renderAspects(data.aspects);
   renderTelemetry(data.telemetry, data.timestamp);
-  renderProductMeta(data.product_meta);
+  renderProductInfoCard(data.product_info || data.product_meta);
+  renderOfflineStores(data.price_comparison);
   renderCharts(data);
   renderProducts(data.platform_data);
   renderSnippets(data.snippets);
 }
 
-// Product Meta Banner
-function renderProductMeta(meta) {
+// ─── Product Info Card (Rich) ──────────────────────────────────────────────
+function renderProductInfoCard(meta) {
   if (!meta) return;
-  const el = document.getElementById('product-meta-bar');
-  if (!el) return;
+  const card = document.getElementById('product-info-card');
+  if (!card) return;
+
   const fmt = v => v ? `₹${Number(v).toLocaleString('en-IN', { maximumFractionDigits: 0 })}` : '';
   const catIcons = {
     smartphone: 'fa-mobile-screen', laptop: 'fa-laptop', tablet: 'fa-tablet-screen-button',
     audio: 'fa-headphones', wearable: 'fa-watch', camera: 'fa-camera', tv: 'fa-tv',
     gaming: 'fa-gamepad', appliance: 'fa-blender', default: 'fa-box'
   };
-  const icon = catIcons[meta.category] || catIcons.default;
-  el.innerHTML = `
-    <div class="flex items-center gap-3 flex-wrap">
-      <div class="flex items-center gap-2">
-        <i class="fas ${icon} text-blue-400"></i>
-        <span class="text-sm font-semibold text-white capitalize">${meta.matched_key || ''}</span>
-        ${meta.brand !== 'unknown' ? `<span class="text-xs px-2 py-0.5 bg-blue-500/20 text-blue-300 rounded-full capitalize">${meta.brand}</span>` : ''}
-        <span class="text-xs px-2 py-0.5 bg-slate-700 text-slate-400 rounded-full capitalize">${meta.category}</span>
+  const catColors = {
+    smartphone: 'blue', laptop: 'cyan', audio: 'purple',
+    wearable: 'rose', camera: 'amber', tv: 'green', gaming: 'red', appliance: 'orange'
+  };
+
+  const icon  = catIcons[meta.category] || catIcons.default;
+  const color = catColors[meta.category] || 'blue';
+
+  // Icon
+  const iconBg = document.getElementById('product-icon-bg');
+  const iconEl = document.getElementById('product-cat-icon');
+  if (iconBg) iconBg.className = `w-12 h-12 rounded-2xl bg-${color}-500/20 border border-${color}-500/30 flex items-center justify-center flex-shrink-0`;
+  if (iconEl) iconEl.className = `fas ${icon} text-${color}-400 text-xl`;
+
+  setText('product-title-name', meta.matched_key || meta.category || 'Product');
+  setText('product-cat-badge', meta.category || '');
+  setText('product-mrp-val', fmt(meta.mrp) || '—');
+  setText('product-fx-rate', meta.inr_rate ? meta.inr_rate.toFixed(2) : '—');
+
+  const brandEl = document.getElementById('product-brand-badge');
+  if (brandEl && meta.brand && meta.brand !== 'unknown') {
+    brandEl.textContent = meta.brand;
+    brandEl.classList.remove('hidden');
+  }
+
+  // Description
+  const descEl = document.getElementById('product-description');
+  if (descEl && meta.description) {
+    descEl.textContent = meta.description;
+    descEl.classList.remove('hidden');
+  }
+
+  // Key highlights
+  const hlWrap = document.getElementById('product-highlights-wrap');
+  const hlEl   = document.getElementById('product-highlights');
+  if (hlWrap && hlEl && meta.key_highlights && meta.key_highlights.length > 0) {
+    hlEl.innerHTML = meta.key_highlights.map(h =>
+      `<span class="inline-flex items-center gap-1.5 text-xs px-2.5 py-1 bg-${color}-500/10 text-${color}-300 border border-${color}-500/20 rounded-full">
+        <i class="fas fa-check-circle text-${color}-400 text-[10px]"></i>${escapeHtml(h)}
+      </span>`
+    ).join('');
+    hlWrap.classList.remove('hidden');
+  }
+
+  // Specs table
+  const specsWrap = document.getElementById('product-specs-wrap');
+  const specsTable = document.getElementById('specs-table');
+  if (specsWrap && specsTable && meta.specs && Object.keys(meta.specs).length > 0) {
+    specsTable.innerHTML = Object.entries(meta.specs).map(([k, v]) => `
+      <div class="flex gap-2 py-1.5 border-b border-slate-800/60">
+        <span class="text-slate-500 min-w-[120px] flex-shrink-0">${escapeHtml(k)}</span>
+        <span class="text-slate-200 font-medium">${escapeHtml(v)}</span>
       </div>
-      ${meta.mrp ? `<div class="flex items-center gap-2 ml-2">
-        <span class="text-xs text-slate-500">MRP:</span>
-        <span class="text-sm font-bold text-white price-mono">${fmt(meta.mrp)}</span>
-        <span class="text-xs text-green-400">• Market prices below MRP</span>
-      </div>` : ''}
-      <div class="ml-auto flex items-center gap-1.5 text-xs text-slate-500">
-        <span class="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse"></span>
-        Live FX: 1 USD = ₹${meta.inr_rate ? meta.inr_rate.toFixed(2) : '—'}
-      </div>
-    </div>
-  `;
-  el.classList.remove('hidden');
+    `).join('');
+    specsWrap.classList.remove('hidden');
+  }
+
+  // Buy links
+  const buyLinksEl = document.getElementById('product-buy-links');
+  if (buyLinksEl && meta.buy_links && Object.keys(meta.buy_links).length > 0) {
+    const linkIcons = {
+      Amazon: 'fab fa-amazon', Flipkart: 'fas fa-shopping-bag',
+      Myntra: 'fas fa-tshirt', JioMart: 'fas fa-store', Official: 'fas fa-globe'
+    };
+    const linkColors = {
+      Amazon: 'bg-orange-500/20 text-orange-300 border-orange-500/30 hover:bg-orange-500/30',
+      Flipkart: 'bg-blue-500/20 text-blue-300 border-blue-500/30 hover:bg-blue-500/30',
+      Myntra: 'bg-pink-500/20 text-pink-300 border-pink-500/30 hover:bg-pink-500/30',
+      JioMart: 'bg-green-500/20 text-green-300 border-green-500/30 hover:bg-green-500/30',
+      Official: 'bg-slate-600/40 text-slate-200 border-slate-500/30 hover:bg-slate-600/60',
+    };
+    buyLinksEl.innerHTML = Object.entries(meta.buy_links).map(([platform, url]) => {
+      const ic = linkIcons[platform] || 'fas fa-external-link-alt';
+      const cl = linkColors[platform] || 'bg-slate-600/40 text-slate-300 border-slate-500/30';
+      return `<a href="${escapeHtml(url)}" target="_blank" rel="noopener" 
+        class="inline-flex items-center gap-1.5 text-xs px-3 py-1.5 border rounded-lg font-medium transition-all ${cl}">
+        <i class="${ic} text-[11px]"></i>${platform}
+        <i class="fas fa-arrow-up-right-from-square text-[9px] opacity-60"></i>
+      </a>`;
+    }).join('');
+  }
+
+  // Savings label
+  const piMin = document.getElementById('price-min');
+  if (meta.mrp && piMin) {
+    const minVal = parseInt(piMin.textContent.replace(/[₹,]/g, '')) || 0;
+    if (minVal && meta.mrp > minVal) {
+      const savePct = Math.round((meta.mrp - minVal) / meta.mrp * 100);
+      setText('product-savings-label', `Save up to ${savePct}% online`);
+    }
+  }
+
+  card.classList.remove('hidden');
+}
+
+// Toggle specs table visibility
+function toggleSpecs() {
+  const wrap = document.getElementById('specs-table-wrap');
+  const btn  = document.getElementById('specs-toggle-btn');
+  const chev = document.getElementById('specs-chevron');
+  if (!wrap) return;
+  const hidden = wrap.classList.contains('hidden');
+  wrap.classList.toggle('hidden', !hidden);
+  if (btn) btn.innerHTML = `<i class="fas fa-chevron-${hidden ? 'up' : 'down'} mr-1" id="specs-chevron"></i>${hidden ? 'Hide' : 'Show'} Specs`;
 }
 
 // Verdict Banner
@@ -402,6 +488,92 @@ function renderAspects(aspects) {
           <div class="h-full rounded-full transition-all duration-700" style="width:${score}%; background:${barColor}"></div>
         </div>
       </div>
+    `;
+  }).join('');
+}
+
+// ─── Dedicated Sentiment Section ─────────────────────────────────────────
+function renderSentimentSection(s) {
+  if (!s) return;
+  const fmt1 = v => `${v}%`;
+
+  setText('sent-pos-big', fmt1(s.positive_pct));
+  setText('sent-neu-big', fmt1(s.neutral_pct));
+  setText('sent-neg-big', fmt1(s.negative_pct));
+  setText('sent-score-big', s.score || '--');
+  setText('sent-polarity-display', `Polarity: ${s.polarity || 0} · ${s.label || ''}`);
+  setText('sentiment-label-display', s.label || '');
+
+  setTimeout(() => {
+    setBarWidth('sent-pos-bar2', s.positive_pct);
+    setBarWidth('sent-neu-bar2', s.neutral_pct);
+    setBarWidth('sent-neg-bar2', s.negative_pct);
+  }, 300);
+}
+
+// ─── Offline Stores Price Comparison ──────────────────────────────────────
+function renderOfflineStores(priceComparison) {
+  if (!priceComparison) return;
+  const fmt = v => v ? `₹${Number(v).toLocaleString('en-IN', { maximumFractionDigits: 0 })}` : '—';
+  const grid = document.getElementById('offline-stores-grid');
+  const strip = document.getElementById('offline-summary-strip');
+
+  // Summary strip
+  if (strip && priceComparison.online_best) {
+    setText('compare-online-best', fmt(priceComparison.online_best));
+    setText('compare-offline-best', fmt(priceComparison.offline_best));
+    const rec = priceComparison.recommendation;
+    const saveAmt = priceComparison.you_save_online;
+    const recEl = document.getElementById('compare-recommendation');
+    if (recEl) {
+      if (rec === 'online' && saveAmt > 0) {
+        recEl.innerHTML = `<span class="text-green-400"><i class="fas fa-trophy mr-1"></i>Buy Online — Save ${fmt(saveAmt)} more vs offline</span>`;
+      } else if (rec === 'offline') {
+        recEl.innerHTML = `<span class="text-amber-400"><i class="fas fa-store mr-1"></i>Offline may offer better deal today</span>`;
+      } else {
+        recEl.innerHTML = `<span class="text-blue-400"><i class="fas fa-balance-scale mr-1"></i>Similar pricing across channels</span>`;
+      }
+    }
+    strip.classList.remove('hidden');
+  }
+
+  // Store cards
+  if (!grid) return;
+  const stores = priceComparison.offline_stores || [];
+  if (stores.length === 0) {
+    grid.innerHTML = `<div class="text-slate-500 text-sm col-span-3 text-center py-4">No offline store data available for this product.</div>`;
+    return;
+  }
+
+  const mrp = priceComparison.mrp || 0;
+  grid.innerHTML = stores.map(store => {
+    const discPct = store.discount_pct || 0;
+    const avail = store.availability || 'Available';
+    const isAvail = avail === 'Available';
+    return `
+      <a href="${escapeHtml(store.url)}" target="_blank" rel="noopener"
+         class="block p-4 bg-slate-800/50 border border-slate-700/50 rounded-xl hover:border-amber-500/40 hover:bg-slate-800 transition-all group">
+        <div class="flex items-center justify-between mb-3">
+          <div class="flex items-center gap-2">
+            <span class="text-xl">${store.icon || '🏪'}</span>
+            <span class="text-sm font-semibold text-white">${escapeHtml(store.store)}</span>
+          </div>
+          <span class="text-[10px] px-1.5 py-0.5 rounded font-medium ${isAvail ? 'bg-green-500/20 text-green-400' : 'bg-amber-500/20 text-amber-400'}">
+            ${escapeHtml(avail)}
+          </span>
+        </div>
+        <div class="flex items-baseline gap-2 mb-1">
+          <span class="text-xl font-black text-amber-300 price-mono">${fmt(store.price)}</span>
+          ${mrp > store.price ? `<span class="text-xs text-slate-500 line-through price-mono">${fmt(mrp)}</span>` : ''}
+          ${discPct > 0 ? `<span class="text-xs font-bold text-green-400">${discPct}% OFF</span>` : ''}
+        </div>
+        <div class="flex items-center justify-between text-xs">
+          <span class="text-slate-500"><i class="fas fa-store mr-1"></i>In-store pickup</span>
+          <span class="text-blue-400 group-hover:text-blue-300 transition-colors">
+            Visit Store <i class="fas fa-arrow-up-right-from-square text-[9px] ml-1"></i>
+          </span>
+        </div>
+      </a>
     `;
   }).join('');
 }

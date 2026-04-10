@@ -106,13 +106,10 @@ def analyze():
         # 2. Run sentiment analysis on collected reviews
         analysis    = sentiment_engine.analyze(query, raw_results)
 
-        # 3. Attach product meta if available (from first listing)
-        for platform_data in raw_results.values():
-            if platform_data:
-                meta = platform_data[0].get('_product_meta')
-                if meta:
-                    analysis['product_meta'] = meta
-                    break
+        # 3. product_info is now embedded in analysis by sentiment engine
+        # Also attach it as product_meta for backward compatibility
+        if 'product_info' in analysis:
+            analysis['product_meta'] = analysis['product_info']
 
         # 4. Store in history
         if email in SEARCH_HISTORY:

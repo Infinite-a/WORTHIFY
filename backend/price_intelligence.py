@@ -12,6 +12,7 @@ import logging
 import requests
 from datetime import datetime, timezone
 from typing import Optional
+from product_specs import get_product_specs, get_offline_prices
 
 logger = logging.getLogger(__name__)
 
@@ -539,7 +540,7 @@ def _estimate_category_price(query: str, inr_rate: float) -> dict:
 
 
 def build_platform_listing(query: str, platform: str, mrp: int, cat: str,
-                            inr_rate: float, variant_idx: int = 0) -> dict:
+                            inr_rate: float, variant_idx: int = 0, specs: dict = None) -> dict:
     """Build a realistic platform listing for a given product."""
     pfactor = PLATFORM_FACTORS.get(platform, PLATFORM_FACTORS["Amazon"])
     d_lo, d_hi = pfactor["discount_range"]
@@ -613,7 +614,7 @@ def build_platform_listing(query: str, platform: str, mrp: int, cat: str,
         "rating":         rating,
         "review_count":   rev_count,
         "reviews":        reviews,
-        "url":            _build_url(platform, query),
+        "url":            _build_url(platform, query, specs),
         "in_stock":       random.random() > 0.05,
         "delivery":       pfactor["delivery"],
         "seller":         random.choice(pfactor["seller_pool"]),
@@ -623,15 +624,25 @@ def build_platform_listing(query: str, platform: str, mrp: int, cat: str,
     }
 
 
-def _build_url(platform: str, query: str) -> str:
+def _build_url(platform: str, query: str, specs: dict = None) -> str:
+    """Build real purchase URLs — use spec-defined URLs when available."""
     q = query.replace(" ", "+")
+    q_dash = query.replace(" ", "-")
+
+    # Use spec-defined buy links if available
+    if specs and specs.get("buy_links"):
+        buy_links = specs["buy_links"]
+        if platform in buy_links:
+            return buy_links[platform]
+
+    # Fallback to search URLs
     urls = {
-        "Amazon":   f"https://www.amazon.in/s?k={q}&ref=nb_sb_noss",
-        "Flipkart": f"https://www.flipkart.com/search?q={q}",
-        "Myntra":   f"https://www.myntra.com/{query.replace(' ', '-')}",
+        "Amazon":   f"https://www.amazon.in/s?k={q}&i=electronics&rh=p_89%3A{query.split()[0].title()}&ref=nb_sb_noss",
+        "Flipkart": f"https://www.flipkart.com/search?q={q}&otracker=search",
+        "Myntra":   f"https://www.myntra.com/{q_dash}",
         "JioMart":  f"https://www.jiomart.com/search/{q}",
     }
-    return urls.get(platform, f"https://www.google.com/search?q={q}+buy+india")
+    return urls.get(platform, f"https://www.google.com/search?q=buy+{q}+india+price")
 
 
 class PriceIntelligenceEngine:
@@ -643,6 +654,7 @@ class PriceIntelligenceEngine:
     def get_prices(self, query: str) -> dict:
         """
         Returns realistic, market-accurate pricing for all platforms.
+        Also includes product specifications, description, real buy links, and offline store prices.
         """
         inr_rate = get_usd_inr_rate()
         logger.info(f"[PRICE] Query='{query}', FX USD/INR={inr_rate:.2f}")
@@ -658,30 +670,40 @@ class PriceIntelligenceEngine:
         mrp = product["mrp"]
         cat = product["cat"]
 
+        # Fetch product specs & description
+        specs = get_product_specs(query)
+        logger.info(f"[SPECS] Found specs={'yes' if specs else 'no'} for '{query}'")
+
         # Build listings for each platform
         results = {}
-
         platforms = ["Amazon", "Flipkart", "Myntra", "JioMart"]
         for i, platform in enumerate(platforms):
             listings = []
-            # 3–4 listings per platform with small price variations
             n = random.randint(3, 4)
             for j in range(n):
-                listing = build_platform_listing(query, platform, mrp, cat, inr_rate, variant_idx=j)
+                listing = build_platform_listing(query, platform, mrp, cat, inr_rate, variant_idx=j, specs=specs)
                 listings.append(listing)
-            # Sort by price
             listings.sort(key=lambda x: x["price"])
             results[platform.lower().replace(" ", "_")] = listings
+
+        # Offline store prices
+        offline_prices = get_offline_prices(mrp, cat, query)
 
         return {
             "results": results,
             "product_info": {
-                "matched_key": product.get("key"),
-                "category": cat,
-                "brand": product.get("brand", "unknown"),
-                "mrp": mrp,
-                "inr_rate": round(inr_rate, 4),
-                "data_source": "market_intelligence_db",
-                "last_updated": datetime.now(timezone.utc).isoformat(),
-            }
+                "matched_key":   product.get("key"),
+                "category":      cat,
+                "brand":         product.get("brand", "unknown"),
+                "mrp":           mrp,
+                "inr_rate":      round(inr_rate, 4),
+                "data_source":   "market_intelligence_db",
+                "last_updated":  datetime.now(timezone.utc).isoformat(),
+                # Rich product data
+                "description":   specs.get("description", ""),
+                "key_highlights":specs.get("key_highlights", []),
+                "specs":         specs.get("specs", {}),
+                "buy_links":     specs.get("buy_links", {}),
+            },
+            "offline_prices": offline_prices,
         }

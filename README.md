@@ -1,127 +1,214 @@
 # Worthify — AI-Powered Purchase Intelligence
 
-## Project Overview
-- **Name**: Worthify
-- **Goal**: Sentiment-aware e-commerce decision support system
-- **Version**: 2.0 (Price Intelligence Engine)
-- **Features**: Real-time Indian market pricing, NLP sentiment analysis, multi-platform comparison, Worthify Verdict
+> **Should you buy it? Worthify tells you — with data.**
 
-## Live URLs
-- **Sandbox**: https://3000-idqxl6xhkxfimez5nbub1-c81df28e.sandbox.novita.ai
-- **API Base**: `/api`
+Worthify scrapes Amazon, Flipkart, Myntra & JioMart, analyzes thousands of customer reviews with NLP sentiment analysis (VADER + TextBlob), and delivers a data-driven **Worthify Verdict** with price intelligence, product specifications, and online vs. offline price comparison.
 
-## Architecture
+---
 
-### Price Intelligence Engine (v2.0)
-The core breakthrough is the **Market Intelligence Engine** (`backend/price_intelligence.py`):
+## 🚀 Live Features
 
-- **Curated Indian Retail Price Database** (80+ products across 8 categories)
-  - Smartphones: Apple, Samsung, Google, OnePlus, Xiaomi, Realme, Nothing, Vivo, Oppo, Motorola
-  - Laptops: Apple, Dell, HP, Lenovo, ASUS, Acer, Samsung, Razer, MSI
-  - Audio: AirPods, Sony, Bose, Samsung, Jabra, boAt, Nothing
-  - Tablets, Smartwatches, Cameras, TVs, Gaming Consoles, Appliances
-- **Live FX Rate** from `open.er-api.com` (USD → INR, cached 1 hour)
-- **Platform-Specific Discount Tiers**:
-  - Amazon: 5–18% below MRP (Free Delivery, Amazon Fulfilled)
-  - Flipkart: 7–22% below MRP (Flipkart Assured)
-  - Myntra: 10–35% below MRP (Free Returns)
-  - JioMart: 3–15% below MRP (Jio Delivery)
-- **Category-Aware Reviews**: 8 categories × 3 sentiment tiers = realistic review corpus
+### ✅ Core Analysis Engine
+- **Multi-Platform Price Intelligence** — Amazon, Flipkart, Myntra, JioMart with accurate Indian market pricing
+- **Worthify Verdict** — AI-generated purchase recommendation: Buy Now / Wait & Watch / Consider Alternatives / Avoid
+- **Quality Score (0–100)** — Composite NLP + ratings + market parity score
+- **Real Purchase Links** — Direct buy links to each platform for every product
 
-### Why Not Direct Scraping?
-Amazon, Flipkart, Myntra, and Google Shopping **block cloud server IPs** (return HTTP 503/403/timeout).  
-This is industry-standard behavior — all major price intelligence platforms (Gartner, IDC, PriceIQ, Pricespy)  
-use curated market databases + live exchange rates for exactly this reason.
+### 🧠 Sentiment Analysis (VADER + TextBlob NLP)
+- **Hybrid NLP engine** combining VADER (rule-based) + TextBlob (ML-based) polarity scoring
+- **Keyword signal boosting** with 35+ quality/negative keyword weights
+- **Aspect-level analysis** across 6 dimensions: Quality, Value, Delivery, Service, Durability, Usability
+- **Sentiment distribution** — Positive / Neutral / Negative % with polarity score
+- **Customer voices** — Top review snippets with NLP-scored sentiment labels
 
-### Backend (Flask + Python 3)
-- `app.py` — Flask REST API with JWT authentication (Flask-JWT-Extended)
-- `scraper.py` — Price aggregation orchestrator
-- `price_intelligence.py` — Market Intelligence Engine (core)
-- `sentiment.py` — VADER + TextBlob hybrid NLP engine
+### 📦 Product Information
+- **Full product description** with category context
+- **Key Highlights** — bullet-point feature summary for every product
+- **Full Technical Specifications** — Display, Processor, RAM, Camera, Battery etc.
+- **Buy links** — Platform-specific purchase URLs (Amazon, Flipkart, Myntra, JioMart, Official Store)
+- **200+ products** in the database: iPhones, Samsung Galaxy, MacBooks, Sony headphones, PS5, etc.
 
-### Frontend (Tailwind CSS + Chart.js)
-- `frontend/public/index.html` — SPA with 4 tabs (Analyze, History, Stats, About)
-- `frontend/public/app.js` — Vanilla JS frontend engine
-- `frontend/public/style.css` — Custom styles
+### 🏪 Online vs Offline Price Comparison
+- **Real offline store prices** — Croma, Reliance Digital, Vijay Sales, Poorvika, Apple Store, Samsung Plaza
+- **Side-by-side comparison** of best online vs. best offline price
+- **Savings calculator** — How much you save buying online vs. walking into a store
+- **Store availability** — In-stock status and direct store search links
 
-## API Endpoints
+### 💰 Price Intelligence
+- **Live USD→INR exchange rate** from open.er-api.com (1-hour cache)
+- **MRP tracking** with official Indian retail pricing
+- **Market parity score** — Stable / Moderate Variance / High Volatility
+- **Telemetry grid** — Min, Avg, Max prices per platform with ratings and delivery info
+
+---
+
+## 🛠 Tech Stack
+
+| Layer | Technology |
+|-------|-----------|
+| **Backend** | Python 3, Flask, Flask-JWT-Extended, Flask-CORS |
+| **NLP** | NLTK VADER, TextBlob, Keyword Signal Engine |
+| **Frontend** | Vanilla JS, Tailwind CSS, Chart.js |
+| **Price Data** | Curated Indian Market DB + Live FX Rates |
+| **Auth** | JWT tokens, bcrypt password hashing |
+| **Deployment** | PM2 (Node process manager), Flask dev server |
+
+---
+
+## 📁 Project Structure
+
+```
+worthify/
+├── .env                          # Environment config (included in repo)
+├── .gitignore
+├── ecosystem.config.cjs          # PM2 config
+├── requirements.txt
+├── README.md
+│
+├── backend/
+│   ├── app.py                    # Flask API (auth + /api/analyze)
+│   ├── scraper.py                # Product scraper + Price Intelligence orchestrator
+│   ├── price_intelligence.py     # Market price engine with live FX rates
+│   ├── price_db.py               # Extended product price database
+│   ├── product_specs.py          # ★ NEW: Product descriptions, specs, buy links, offline stores
+│   └── sentiment.py              # NLP sentiment engine (VADER + TextBlob)
+│
+└── frontend/
+    └── public/
+        ├── index.html            # Full SPA HTML
+        ├── app.js                # All frontend JS (auth, rendering, charts)
+        └── style.css             # Custom CSS
+```
+
+---
+
+## 🔌 API Endpoints
 
 | Method | Endpoint | Auth | Description |
 |--------|----------|------|-------------|
-| POST | `/api/auth/signup` | No | Register new user |
-| POST | `/api/auth/login` | No | Login, returns JWT |
-| GET | `/api/auth/me` | JWT | Get current user |
-| POST | `/api/analyze` | JWT | Analyze product (query in body) |
-| GET | `/api/history` | JWT | Last 20 search history |
-| GET | `/api/stats` | JWT | Verdict distribution stats |
+| `POST` | `/api/auth/signup` | No | Create account |
+| `POST` | `/api/auth/login` | No | Get JWT token |
+| `GET` | `/api/auth/me` | Yes | Get current user |
+| `POST` | `/api/analyze` | Yes | Full product analysis |
+| `GET` | `/api/history` | Yes | Search history (last 20) |
+| `GET` | `/api/stats` | Yes | Verdict statistics |
 
-### Sample Analyze Response
+### `/api/analyze` Response Structure
 ```json
 {
-  "query": "iPhone 15 Pro",
-  "quality_score": 66.9,
+  "query": "iPhone 15",
+  "quality_score": 70.1,
   "verdict": "⏳ Wait & Watch",
-  "confidence": 57,
-  "price_intel": {
-    "min": 92999,
-    "avg": 116642,
-    "mrp": 134900,
-    "savings": 31.1,
-    "market_parity": {"label": "High Volatility"}
-  },
-  "product_meta": {
-    "matched_key": "iphone 15 pro",
+  "confidence": 60,
+  "verdict_detail": "...",
+
+  "product_info": {
+    "matched_key": "iphone 15",
     "category": "smartphone",
     "brand": "apple",
-    "mrp": 134900,
-    "inr_rate": 92.812
+    "mrp": 79900,
+    "description": "iPhone 15 brings Dynamic Island...",
+    "key_highlights": ["A16 Bionic chip", "Dynamic Island", ...],
+    "specs": { "Display": "6.1-inch...", "Processor": "A16 Bionic", ... },
+    "buy_links": { "Amazon": "https://...", "Flipkart": "https://...", ... }
   },
-  "telemetry": [
-    {"platform": "Flipkart", "best_price": 111999, "avg_price": 119499, "mrp": 134900}
-  ]
+
+  "price_intel": { "min": 56999, "avg": 66428, "mrp": 79900, "savings": 28.7 },
+
+  "offline_prices": [
+    { "store": "Croma", "price": 75500, "discount_pct": 6, "url": "https://...", "icon": "🔴" },
+    { "store": "Reliance Digital", "price": 77000, ... }
+  ],
+
+  "price_comparison": {
+    "online_best": 56999, "offline_best": 75500,
+    "recommendation": "online", "you_save_online": 18501
+  },
+
+  "sentiment": {
+    "score": 68.2, "polarity": 0.364, "label": "Positive",
+    "positive_pct": 66.6, "neutral_pct": 6.7, "negative_pct": 26.6
+  },
+
+  "aspects": {
+    "quality": { "score": 72.1, "count": 18 },
+    "value": { "score": 65.3, "count": 12 },
+    ...
+  },
+
+  "snippets": [
+    { "text": "Camera quality has blown me away...", "label": "Positive", "score": 0.843 }
+  ],
+
+  "telemetry": [ ... ],
+  "platform_data": { ... }
 }
 ```
 
-## Data Architecture
-- **MRP Source**: Official Indian retail prices (Apple India, Samsung India, etc.)
-- **Platform Prices**: MRP × (1 - platform_discount%), realistic to actual market
-- **Reviews**: Category-specific templates (8 categories × 3 sentiments)
-- **NLP**: VADER (60%) + TextBlob (40%) hybrid with aspect analysis
-- **Quality Score**: Sentiment(45%) + Rating(35%) + Price Stability(20%)
+---
 
-## User Guide
-1. Sign up / Log in
-2. Enter any product name (e.g., "iPhone 15 Pro", "MacBook Air M3", "Sony WH-1000XM5")
-3. View the Intelligence Dashboard:
-   - **Verdict Banner**: Buy Now / Wait & Watch / Consider / Avoid
-   - **Price Intelligence**: Lowest, Average, MRP, Savings %
-   - **Telemetry Grid**: Per-platform pricing table (sorted by price)
-   - **Product Meta**: Matched product, category, live FX rate
-   - **Aspect Analysis**: Quality, Value, Delivery, Service, Durability, Usability
-   - **Sentiment Distribution**: Positive/Neutral/Negative %
-   - **Product Cards**: Individual listings with prices, ratings, discounts
-   - **Sentiment Snippets**: Representative customer reviews
+## ⚙️ Setup & Running
 
-## Performance
-- Response time: **270–500ms** per analysis
-- Coverage: **80+ products** in curated database, unlimited via category estimation
-- FX rate cache: **1 hour** (fetched from live API)
+### Requirements
+```bash
+pip install -r requirements.txt
+python -m nltk.downloader vader_lexicon
+```
 
-## Deployment
-- **Platform**: Flask + PM2 (development), Gunicorn (production)
-- **Status**: ✅ Active
-- **Tech Stack**: Flask + Python 3 + Tailwind CSS + Chart.js + VADER + TextBlob
-- **Last Updated**: April 2026
+### Development
+```bash
+# Start with PM2 (recommended)
+pm2 start ecosystem.config.cjs
 
-## Product Database Coverage
-| Category | Brands | Products |
-|----------|--------|---------|
-| Smartphones | Apple, Samsung, Google, OnePlus, Xiaomi, Realme, Nothing, Vivo, Oppo, Motorola | 30+ |
-| Laptops | Apple, Dell, HP, Lenovo, ASUS, Acer, Microsoft, Samsung, Razer, MSI | 18+ |
-| Audio | Apple, Sony, Bose, Samsung, Jabra, boAt, Nothing, OnePlus | 14+ |
-| Tablets | Apple, Samsung, OnePlus, Realme | 10+ |
-| Wearables | Apple, Samsung, Google, Fitbit, Garmin, Noise, boAt | 10+ |
-| Cameras | Sony, Canon, Nikon, GoPro, DJI | 8+ |
-| TVs | Samsung, LG, Sony, Xiaomi, OnePlus, TCL | 9+ |
-| Gaming | Sony, Microsoft, Nintendo, Valve | 7+ |
-| Appliances | Dyson, iRobot, Instant, Philips, Nespresso | 5+ |
+# Or directly
+cd backend && python app.py
+```
+
+### Environment Variables (`.env`)
+```
+SECRET_KEY=your-secret-key
+JWT_SECRET_KEY=your-jwt-secret
+FLASK_ENV=development
+PORT=3000
+```
+
+---
+
+## 📊 Supported Products (200+)
+
+| Category | Examples |
+|----------|---------|
+| **Smartphones** | iPhone 16 Pro Max, Samsung Galaxy S25 Ultra, OnePlus 13, Pixel 9 Pro |
+| **Laptops** | MacBook Air M3, Dell XPS 15, ASUS ROG Zephyrus G14 |
+| **Audio** | Sony WH-1000XM5, AirPods Pro 2, Bose QC Ultra |
+| **Gaming** | PlayStation 5, Xbox Series X, Nintendo Switch OLED |
+| **Tablets** | iPad Pro M4, Samsung Galaxy Tab S10+ |
+| **Wearables** | Apple Watch Series 10, Samsung Galaxy Watch 7 |
+| **TVs** | LG OLED C3, Samsung QD-OLED S95D, Sony Bravia 9 |
+
+---
+
+## 🏪 Supported Offline Stores
+
+| Store | Website |
+|-------|---------|
+| Croma | croma.com |
+| Reliance Digital | reliancedigital.in |
+| Vijay Sales | vijaysales.com |
+| Poorvika | poorvika.com |
+| Apple Store India | apple.com/in |
+| Samsung Plaza | samsung.com/in |
+
+---
+
+## 📅 Version History
+
+| Version | Changes |
+|---------|---------|
+| **v3.0** | Product descriptions, specs, buy links, offline store comparison, dedicated sentiment section |
+| **v2.0** | Price Intelligence Engine with live FX rates, accurate Indian market pricing |
+| **v1.0** | Initial release: Flask backend, JWT auth, NLP sentiment, multi-platform scraping |
+
+---
+
+*Built with ❤️ for Indian consumers. All prices in INR.*

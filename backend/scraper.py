@@ -215,15 +215,13 @@ class ProductScraper:
     def search_all(self, query: str) -> dict:
         """
         Price aggregation using Market Intelligence Engine.
-        Live scraping of Amazon/Flipkart/Google is attempted but these sites
-        block cloud server IPs (returns 503/403/timeout). The Market Intelligence
-        Engine uses curated Indian retail pricing with live FX rates —
-        the same approach used by Gartner, IDC, and commercial price trackers.
+        Returns platform listings + offline store prices + product specs.
         """
         # Primary: Market Intelligence Engine (always fast and accurate)
         intel = self.pie.get_prices(query)
-        intel_results = intel["results"]
-        product_info  = intel["product_info"]
+        intel_results  = intel["results"]
+        product_info   = intel["product_info"]
+        offline_prices = intel.get("offline_prices", [])
 
         logger.info(f"[SCRAPER] Intelligence: key='{product_info.get('matched_key')}' mrp=₹{product_info.get('mrp',0):,} cat={product_info.get('category')}")
 
@@ -238,5 +236,9 @@ class ProductScraper:
         for platform_listings in final.values():
             for listing in platform_listings:
                 listing["_product_meta"] = product_info
+
+        # Stash offline prices + product_info for the sentiment engine to surface
+        final["_offline_prices"] = offline_prices
+        final["_product_info"]   = product_info
 
         return final

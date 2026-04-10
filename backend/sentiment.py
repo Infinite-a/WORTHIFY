@@ -58,7 +58,12 @@ class SentimentEngine:
     def analyze(self, query: str, raw_results: dict) -> dict:
         """
         Full pipeline: collect reviews → analyze → score → verdict → response.
+        Includes offline store prices, product specs, descriptions, and buy links.
         """
+        # Extract special metadata injected by scraper
+        offline_prices = raw_results.pop("_offline_prices", [])
+        product_info   = raw_results.pop("_product_info", {})
+
         # 1. Collect all products & reviews
         all_products = []
         for platform, products in raw_results.items():
@@ -71,10 +76,10 @@ class SentimentEngine:
         # 2. Per-platform aggregation
         platform_data = self._aggregate_platforms(raw_results)
 
-        # 3. Sentiment analysis
+        # 3. Sentiment analysis (VADER + TextBlob hybrid)
         sentiment_result = self._analyze_reviews(all_reviews)
 
-        # 4. Price intelligence
+        # 4. Price intelligence (online)
         price_intel = self._price_intelligence(all_products)
 
         # 5. Aspect analysis
@@ -96,21 +101,28 @@ class SentimentEngine:
         # 9. Telemetry grid
         telemetry = self._build_telemetry(platform_data, price_intel)
 
+        # 10. Online vs Offline price comparison
+        price_comparison = self._build_price_comparison(price_intel, offline_prices)
+
         return {
-            "query":           query,
-            "timestamp":       datetime.utcnow().isoformat() + "Z",
-            "quality_score":   quality_score,
-            "verdict":         verdict,
-            "verdict_detail":  verdict_detail,
-            "confidence":      confidence,
-            "price_intel":     price_intel,
-            "sentiment":       sentiment_result,
-            "aspects":         aspects,
-            "snippets":        snippets,
-            "telemetry":       telemetry,
-            "platform_data":   platform_data,
-            "total_reviews":   len(all_reviews),
-            "total_products":  len(all_products),
+            "query":            query,
+            "timestamp":        datetime.utcnow().isoformat() + "Z",
+            "quality_score":    quality_score,
+            "verdict":          verdict,
+            "verdict_detail":   verdict_detail,
+            "confidence":       confidence,
+            "price_intel":      price_intel,
+            "sentiment":        sentiment_result,
+            "aspects":          aspects,
+            "snippets":         snippets,
+            "telemetry":        telemetry,
+            "platform_data":    platform_data,
+            "total_reviews":    len(all_reviews),
+            "total_products":   len(all_products),
+            # New fields
+            "offline_prices":   offline_prices,
+            "price_comparison": price_comparison,
+            "product_info":     product_info,
         }
 
     # ─── Helpers ──────────────────────────────────────────────────────────────
@@ -385,6 +397,37 @@ class SentimentEngine:
         # Sort by min_price ascending
         rows.sort(key=lambda r: r['min_price'])
         return rows
+
+    def _build_price_comparison(self, price_intel: dict, offline_prices: list) -> dict:
+        """
+        Build a comprehensive online vs offline price comparison table.
+        """
+        online_best  = price_intel.get("min", 0)
+        offline_best = min((o["price"] for o in offline_prices), default=0)
+        mrp          = price_intel.get("mrp", 0)
+
+        if online_best and offline_best and mrp:
+            online_saving_pct  = round((mrp - online_best)  / mrp * 100, 1)
+            offline_saving_pct = round((mrp - offline_best) / mrp * 100, 1)
+            diff_pct           = round((offline_best - online_best) / offline_best * 100, 1) if offline_best else 0
+            recommendation = "online" if online_best < offline_best else "offline"
+            saving_online  = round(offline_best - online_best) if offline_best > online_best else 0
+        else:
+            online_saving_pct = offline_saving_pct = diff_pct = 0
+            recommendation = "online"
+            saving_online  = 0
+
+        return {
+            "online_best":          online_best,
+            "offline_best":         offline_best,
+            "mrp":                  mrp,
+            "online_saving_pct":    online_saving_pct,
+            "offline_saving_pct":   offline_saving_pct,
+            "price_diff_pct":       diff_pct,
+            "you_save_online":      saving_online,
+            "recommendation":       recommendation,
+            "offline_stores":       offline_prices,
+        }
 
     def _polarity_label(self, p):
         if p > 0.35:   return "Very Positive"

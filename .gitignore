@@ -1,15 +1,35 @@
+# ─── Python ────────────────────────────────────────────────────────────────
 __pycache__/
 *.pyc
 *.pyo
-.env
-.env.local
+*.pyd
+.Python
+
+# ─── Virtual environments ──────────────────────────────────────────────────
+venv/
+.venv/
+env/
+ENV/
+
+# ─── Runtime / Logs ────────────────────────────────────────────────────────
+*.log
+.pm2/
+pids/
+
+# ─── Node / Frontend build ─────────────────────────────────────────────────
 node_modules/
 .wrangler/
 dist/
-*.log
-.pm2/
+
+# ─── Archives ──────────────────────────────────────────────────────────────
 *.tar.gz
 *.zip
+
+# ─── OS files ──────────────────────────────────────────────────────────────
 .DS_Store
-venv/
-.venv/
+Thumbs.db
+
+# NOTE: .env IS intentionally committed to this repository so the full
+# project configuration is visible. In a real production project, .env
+# would be added here and secrets managed via a secrets manager.
+# .env        ← intentionally NOT excluded
