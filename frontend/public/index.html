@@ -1,0 +1,776 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Worthify — AI-Powered Purchase Intelligence</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <link rel="stylesheet" href="/style.css" />
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            slate: { 850: '#1a2234', 900: '#0f172a', 950: '#0a0f1e' },
+            blue:  { 450: '#4da3ff', 550: '#2e8fff' }
+          }
+        }
+      }
+    }
+  </script>
+</head>
+<body class="bg-slate-950 text-slate-100 font-sans antialiased">
+
+<!-- ═══════════════════ LANDING PAGE ═══════════════════ -->
+<div id="page-landing">
+  <!-- Navbar -->
+  <nav class="fixed top-0 w-full z-50 backdrop-blur-xl bg-slate-950/80 border-b border-slate-800/60">
+    <div class="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-blue-500 to-blue-700 flex items-center justify-center shadow-lg shadow-blue-500/30">
+          <i class="fas fa-brain text-white text-sm"></i>
+        </div>
+        <span class="text-xl font-bold tracking-tight">
+          <span class="text-white">Worth</span><span class="text-blue-400">ify</span>
+        </span>
+      </div>
+      <div class="hidden md:flex items-center gap-8 text-sm text-slate-400">
+        <a href="#features" class="hover:text-blue-400 transition-colors">Features</a>
+        <a href="#how-it-works" class="hover:text-blue-400 transition-colors">How It Works</a>
+        <a href="#platforms" class="hover:text-blue-400 transition-colors">Platforms</a>
+      </div>
+      <div class="flex items-center gap-3">
+        <button onclick="showPage('login')" class="px-4 py-2 text-sm text-slate-300 hover:text-white transition-colors">Log in</button>
+        <button onclick="showPage('signup')" class="px-5 py-2 text-sm bg-blue-600 hover:bg-blue-500 rounded-lg font-medium transition-all shadow-lg shadow-blue-600/25">Get Started</button>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Hero Section -->
+  <section class="min-h-screen flex items-center justify-center relative overflow-hidden pt-20">
+    <!-- Ambient BG -->
+    <div class="absolute inset-0 overflow-hidden">
+      <div class="absolute -top-40 -left-40 w-[600px] h-[600px] bg-blue-600/10 rounded-full blur-[120px]"></div>
+      <div class="absolute -bottom-40 -right-40 w-[500px] h-[500px] bg-slate-600/15 rounded-full blur-[100px]"></div>
+      <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[300px] h-[300px] bg-blue-500/5 rounded-full blur-[80px]"></div>
+      <!-- Grid overlay -->
+      <div class="absolute inset-0 bg-[url('data:image/svg+xml,%3Csvg width=\"60\" height=\"60\" viewBox=\"0 0 60 60\" xmlns=\"http://www.w3.org/2000/svg\"%3E%3Cg fill=\"none\" fill-rule=\"evenodd\"%3E%3Cg fill=\"%23334155\" fill-opacity=\"0.15\"%3E%3Cpath d=\"M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z\"/%3E%3C/g%3E%3C/g%3E%3C/svg%3E')]"></div>
+    </div>
+
+    <div class="relative z-10 text-center max-w-4xl mx-auto px-6">
+      <!-- Badge -->
+      <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-blue-500/10 border border-blue-500/30 text-blue-400 text-sm mb-8 animate-pulse-slow">
+        <span class="w-2 h-2 bg-blue-400 rounded-full animate-ping-slow"></span>
+        AI-Powered · Real-Time · Multi-Platform
+      </div>
+
+      <h1 class="text-5xl md:text-7xl font-black tracking-tight mb-6 leading-none">
+        <span class="text-white">Is it actually</span><br>
+        <span class="bg-gradient-to-r from-blue-400 via-blue-300 to-slate-300 bg-clip-text text-transparent">worth buying?</span>
+      </h1>
+
+      <p class="text-lg md:text-xl text-slate-400 max-w-2xl mx-auto mb-10 leading-relaxed">
+        Worthify scrapes <strong class="text-slate-300">Amazon, Flipkart, Myntra & Google</strong>, 
+        analyzes thousands of customer reviews with NLP, and delivers a data-driven 
+        <strong class="text-blue-400">Worthify Verdict</strong> in seconds.
+      </p>
+
+      <!-- CTA + Demo Input -->
+      <div class="flex flex-col sm:flex-row items-center gap-4 justify-center mb-12">
+        <button onclick="showPage('signup')" class="group px-8 py-4 bg-blue-600 hover:bg-blue-500 rounded-xl font-semibold text-lg transition-all shadow-2xl shadow-blue-600/30 hover:shadow-blue-500/40 hover:-translate-y-0.5">
+          Start Analyzing Free
+          <i class="fas fa-arrow-right ml-2 group-hover:translate-x-1 transition-transform"></i>
+        </button>
+        <button onclick="showPage('login')" class="px-8 py-4 border border-slate-700 hover:border-slate-500 rounded-xl font-medium text-slate-300 hover:text-white transition-all">
+          <i class="fas fa-sign-in-alt mr-2"></i>Sign In
+        </button>
+      </div>
+
+      <!-- Stats Row -->
+      <div class="flex flex-wrap items-center justify-center gap-8 text-center">
+        <div class="stat-card">
+          <div class="text-3xl font-black text-blue-400">4</div>
+          <div class="text-xs text-slate-500 mt-1">Platforms Scanned</div>
+        </div>
+        <div class="w-px h-12 bg-slate-800 hidden sm:block"></div>
+        <div class="stat-card">
+          <div class="text-3xl font-black text-blue-400">NLP</div>
+          <div class="text-xs text-slate-500 mt-1">Sentiment Engine</div>
+        </div>
+        <div class="w-px h-12 bg-slate-800 hidden sm:block"></div>
+        <div class="stat-card">
+          <div class="text-3xl font-black text-blue-400">100</div>
+          <div class="text-xs text-slate-500 mt-1">Quality Score /100</div>
+        </div>
+        <div class="w-px h-12 bg-slate-800 hidden sm:block"></div>
+        <div class="stat-card">
+          <div class="text-3xl font-black text-blue-400">Live</div>
+          <div class="text-xs text-slate-500 mt-1">Price Intelligence</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Floating card preview -->
+    <div class="absolute bottom-10 left-1/2 -translate-x-1/2 animate-float hidden lg:block">
+      <div class="verdict-preview-card">
+        <div class="flex items-center gap-3 mb-3">
+          <div class="w-8 h-8 rounded-lg bg-green-500/20 flex items-center justify-center">
+            <i class="fas fa-check text-green-400 text-xs"></i>
+          </div>
+          <div>
+            <div class="text-xs text-slate-400">Worthify Verdict</div>
+            <div class="text-sm font-bold text-green-400">✅ Buy Now</div>
+          </div>
+          <div class="ml-auto">
+            <div class="text-xs text-slate-500">Quality</div>
+            <div class="text-lg font-black text-white">84<span class="text-xs text-slate-400">/100</span></div>
+          </div>
+        </div>
+        <div class="h-1.5 bg-slate-700 rounded-full overflow-hidden">
+          <div class="h-full bg-gradient-to-r from-green-500 to-blue-500 rounded-full" style="width:84%"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Features Section -->
+  <section id="features" class="py-24 relative">
+    <div class="max-w-7xl mx-auto px-6">
+      <div class="text-center mb-16">
+        <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-slate-800 text-slate-400 text-xs mb-4">
+          <i class="fas fa-sparkles text-blue-400"></i> CORE CAPABILITIES
+        </div>
+        <h2 class="text-4xl font-black text-white">Everything you need to decide smarter</h2>
+        <p class="text-slate-400 mt-4 max-w-xl mx-auto">Built on a real-time data pipeline combining multi-source scraping with production-grade NLP.</p>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <!-- Feature Cards -->
+        <div class="feature-card group">
+          <div class="feature-icon bg-blue-500/15 text-blue-400 group-hover:bg-blue-500/25">
+            <i class="fas fa-spider"></i>
+          </div>
+          <h3 class="text-lg font-bold text-white mt-4 mb-2">Unblockable Scraper</h3>
+          <p class="text-slate-400 text-sm leading-relaxed">Rotating user agents, CloudScraper bypass, and intelligent fallback ensure zero dead-ends across Amazon, Flipkart, Myntra, and Google Shopping.</p>
+        </div>
+
+        <div class="feature-card group">
+          <div class="feature-icon bg-purple-500/15 text-purple-400 group-hover:bg-purple-500/25">
+            <i class="fas fa-brain"></i>
+          </div>
+          <h3 class="text-lg font-bold text-white mt-4 mb-2">NLP Sentiment Engine</h3>
+          <p class="text-slate-400 text-sm leading-relaxed">VADER + TextBlob hybrid analysis processes every customer review into a quantitative Quality Score with aspect-level breakdown.</p>
+        </div>
+
+        <div class="feature-card group">
+          <div class="feature-icon bg-green-500/15 text-green-400 group-hover:bg-green-500/25">
+            <i class="fas fa-chart-line"></i>
+          </div>
+          <h3 class="text-lg font-bold text-white mt-4 mb-2">Live Price Intelligence</h3>
+          <p class="text-slate-400 text-sm leading-relaxed">Real-time telemetry grid shows min/max/average pricing across all platforms with market parity signals and best-deal detection.</p>
+        </div>
+
+        <div class="feature-card group">
+          <div class="feature-icon bg-amber-500/15 text-amber-400 group-hover:bg-amber-500/25">
+            <i class="fas fa-shield-halved"></i>
+          </div>
+          <h3 class="text-lg font-bold text-white mt-4 mb-2">JWT Security</h3>
+          <p class="text-slate-400 text-sm leading-relaxed">Industry-standard JWT authentication with 24h expiring tokens, bcrypt password hashing, and per-user encrypted history tracking.</p>
+        </div>
+
+        <div class="feature-card group">
+          <div class="feature-icon bg-rose-500/15 text-rose-400 group-hover:bg-rose-500/25">
+            <i class="fas fa-gavel"></i>
+          </div>
+          <h3 class="text-lg font-bold text-white mt-4 mb-2">Worthify Verdict</h3>
+          <p class="text-slate-400 text-sm leading-relaxed">Four-tier decision: Buy Now, Wait & Watch, Consider Alternatives, or Avoid — with confidence percentage and detailed reasoning.</p>
+        </div>
+
+        <div class="feature-card group">
+          <div class="feature-icon bg-cyan-500/15 text-cyan-400 group-hover:bg-cyan-500/25">
+            <i class="fas fa-layer-group"></i>
+          </div>
+          <h3 class="text-lg font-bold text-white mt-4 mb-2">Aspect Analysis</h3>
+          <p class="text-slate-400 text-sm leading-relaxed">Breakdown scores for Quality, Value, Delivery, Service, Durability, and Usability extracted directly from customer language patterns.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- How It Works -->
+  <section id="how-it-works" class="py-24 bg-slate-900/50">
+    <div class="max-w-5xl mx-auto px-6">
+      <div class="text-center mb-16">
+        <h2 class="text-4xl font-black text-white">How Worthify Works</h2>
+        <p class="text-slate-400 mt-3">From query to verdict in under 10 seconds</p>
+      </div>
+      <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+        <div class="step-card">
+          <div class="step-num">01</div>
+          <i class="fas fa-search text-2xl text-blue-400 mb-3"></i>
+          <h4 class="font-bold text-white mb-2">Enter Product</h4>
+          <p class="text-slate-400 text-xs">Type any product name — phone, laptop, shoes, appliance.</p>
+        </div>
+        <div class="step-card">
+          <div class="step-num">02</div>
+          <i class="fas fa-bolt text-2xl text-amber-400 mb-3"></i>
+          <h4 class="font-bold text-white mb-2">Multi-Platform Scan</h4>
+          <p class="text-slate-400 text-xs">Scraper hits 4 platforms simultaneously, collecting prices & reviews.</p>
+        </div>
+        <div class="step-card">
+          <div class="step-num">03</div>
+          <i class="fas fa-atom text-2xl text-purple-400 mb-3"></i>
+          <h4 class="font-bold text-white mb-2">NLP Processing</h4>
+          <p class="text-slate-400 text-xs">Hundreds of reviews analyzed for sentiment, aspects, and quality signals.</p>
+        </div>
+        <div class="step-card">
+          <div class="step-num">04</div>
+          <i class="fas fa-trophy text-2xl text-green-400 mb-3"></i>
+          <h4 class="font-bold text-white mb-2">Verdict Delivered</h4>
+          <p class="text-slate-400 text-xs">Data-driven Buy/Wait/Avoid recommendation with full reasoning.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Platforms -->
+  <section id="platforms" class="py-20">
+    <div class="max-w-5xl mx-auto px-6 text-center">
+      <p class="text-slate-500 text-sm uppercase tracking-widest mb-8">Powered by real data from</p>
+      <div class="flex flex-wrap items-center justify-center gap-8">
+        <div class="platform-pill"><i class="fab fa-amazon text-orange-400"></i> Amazon</div>
+        <div class="platform-pill"><i class="fas fa-shopping-bag text-blue-400"></i> Flipkart</div>
+        <div class="platform-pill"><i class="fas fa-tshirt text-pink-400"></i> Myntra</div>
+        <div class="platform-pill"><i class="fab fa-google text-green-400"></i> Google Shopping</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA Section -->
+  <section class="py-24">
+    <div class="max-w-3xl mx-auto px-6 text-center">
+      <div class="relative rounded-2xl overflow-hidden bg-gradient-to-br from-blue-900/40 to-slate-800/40 border border-blue-500/20 p-12">
+        <div class="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(59,130,246,0.1),transparent_70%)]"></div>
+        <div class="relative">
+          <h2 class="text-4xl font-black text-white mb-4">Never buy blind again.</h2>
+          <p class="text-slate-400 mb-8">Join thousands of smart shoppers who use Worthify before every purchase decision.</p>
+          <button onclick="showPage('signup')" class="px-10 py-4 bg-blue-600 hover:bg-blue-500 rounded-xl font-bold text-lg shadow-2xl shadow-blue-600/40 transition-all hover:-translate-y-0.5">
+            Analyze Your First Product — Free
+          </button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="border-t border-slate-800 py-8">
+    <div class="max-w-7xl mx-auto px-6 flex flex-col md:flex-row items-center justify-between gap-4">
+      <div class="flex items-center gap-2 text-slate-500 text-sm">
+        <i class="fas fa-brain text-blue-400"></i>
+        <span><span class="text-white">Worth</span><span class="text-blue-400">ify</span></span>
+        <span>· AI Purchase Intelligence</span>
+      </div>
+      <div class="text-slate-600 text-xs">© 2024 Worthify. Built with NLP + Real-Time Scraping.</div>
+    </div>
+  </footer>
+</div>
+
+<!-- ═══════════════════ LOGIN PAGE ═══════════════════ -->
+<div id="page-login" class="hidden min-h-screen flex items-center justify-center p-4">
+  <div class="auth-bg-effects"></div>
+  <div class="w-full max-w-md relative z-10">
+    <div class="text-center mb-8">
+      <button onclick="showPage('landing')" class="inline-flex items-center gap-2 text-slate-400 hover:text-white text-sm mb-6 transition-colors">
+        <i class="fas fa-arrow-left"></i> Back to Home
+      </button>
+      <div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-blue-500 to-blue-700 flex items-center justify-center mx-auto mb-4 shadow-xl shadow-blue-500/30">
+        <i class="fas fa-brain text-white text-xl"></i>
+      </div>
+      <h1 class="text-2xl font-black text-white">Welcome back</h1>
+      <p class="text-slate-400 text-sm mt-1">Sign in to your Worthify account</p>
+    </div>
+
+    <div class="auth-card">
+      <form id="login-form" onsubmit="handleLogin(event)">
+        <div class="space-y-4">
+          <div>
+            <label class="block text-xs font-medium text-slate-400 mb-2">Email Address</label>
+            <div class="relative">
+              <i class="fas fa-envelope absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 text-sm"></i>
+              <input id="login-email" type="email" placeholder="you@example.com" required
+                class="auth-input pl-10" />
+            </div>
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-slate-400 mb-2">Password</label>
+            <div class="relative">
+              <i class="fas fa-lock absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 text-sm"></i>
+              <input id="login-password" type="password" placeholder="••••••••" required
+                class="auth-input pl-10" />
+              <button type="button" onclick="togglePassword('login-password')" class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300">
+                <i class="fas fa-eye text-sm"></i>
+              </button>
+            </div>
+          </div>
+          <div id="login-error" class="hidden px-4 py-3 bg-red-500/15 border border-red-500/30 rounded-lg text-red-400 text-sm"></div>
+          <button type="submit" class="w-full py-3 bg-blue-600 hover:bg-blue-500 rounded-xl font-semibold transition-all shadow-lg shadow-blue-600/25">
+            <span id="login-btn-text">Sign In</span>
+            <span id="login-loading" class="hidden"><i class="fas fa-spinner fa-spin"></i> Signing in...</span>
+          </button>
+        </div>
+      </form>
+      <p class="text-center text-slate-500 text-sm mt-6">
+        Don't have an account? 
+        <button onclick="showPage('signup')" class="text-blue-400 hover:text-blue-300 font-medium transition-colors">Create one free</button>
+      </p>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════ SIGNUP PAGE ═══════════════════ -->
+<div id="page-signup" class="hidden min-h-screen flex items-center justify-center p-4">
+  <div class="auth-bg-effects"></div>
+  <div class="w-full max-w-md relative z-10">
+    <div class="text-center mb-8">
+      <button onclick="showPage('landing')" class="inline-flex items-center gap-2 text-slate-400 hover:text-white text-sm mb-6 transition-colors">
+        <i class="fas fa-arrow-left"></i> Back to Home
+      </button>
+      <div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-blue-500 to-blue-700 flex items-center justify-center mx-auto mb-4 shadow-xl shadow-blue-500/30">
+        <i class="fas fa-brain text-white text-xl"></i>
+      </div>
+      <h1 class="text-2xl font-black text-white">Create your account</h1>
+      <p class="text-slate-400 text-sm mt-1">Start making smarter purchase decisions</p>
+    </div>
+
+    <div class="auth-card">
+      <form id="signup-form" onsubmit="handleSignup(event)">
+        <div class="space-y-4">
+          <div>
+            <label class="block text-xs font-medium text-slate-400 mb-2">Full Name</label>
+            <div class="relative">
+              <i class="fas fa-user absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 text-sm"></i>
+              <input id="signup-name" type="text" placeholder="John Doe" required
+                class="auth-input pl-10" />
+            </div>
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-slate-400 mb-2">Email Address</label>
+            <div class="relative">
+              <i class="fas fa-envelope absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 text-sm"></i>
+              <input id="signup-email" type="email" placeholder="you@example.com" required
+                class="auth-input pl-10" />
+            </div>
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-slate-400 mb-2">Password</label>
+            <div class="relative">
+              <i class="fas fa-lock absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 text-sm"></i>
+              <input id="signup-password" type="password" placeholder="Min. 6 characters" required minlength="6"
+                class="auth-input pl-10" />
+              <button type="button" onclick="togglePassword('signup-password')" class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300">
+                <i class="fas fa-eye text-sm"></i>
+              </button>
+            </div>
+          </div>
+          <div id="signup-error" class="hidden px-4 py-3 bg-red-500/15 border border-red-500/30 rounded-lg text-red-400 text-sm"></div>
+          <button type="submit" class="w-full py-3 bg-blue-600 hover:bg-blue-500 rounded-xl font-semibold transition-all shadow-lg shadow-blue-600/25">
+            <span id="signup-btn-text">Create Account</span>
+            <span id="signup-loading" class="hidden"><i class="fas fa-spinner fa-spin"></i> Creating...</span>
+          </button>
+        </div>
+      </form>
+      <p class="text-center text-slate-500 text-sm mt-6">
+        Already have an account? 
+        <button onclick="showPage('login')" class="text-blue-400 hover:text-blue-300 font-medium transition-colors">Sign in</button>
+      </p>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════ DASHBOARD PAGE ═══════════════════ -->
+<div id="page-dashboard" class="hidden min-h-screen flex">
+  <!-- Sidebar -->
+  <aside class="w-64 flex-shrink-0 bg-slate-900/90 border-r border-slate-800/60 flex flex-col fixed h-full z-40 backdrop-blur-xl">
+    <div class="p-6 border-b border-slate-800/60">
+      <div class="flex items-center gap-3">
+        <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-blue-500 to-blue-700 flex items-center justify-center shadow-lg shadow-blue-500/25">
+          <i class="fas fa-brain text-white text-sm"></i>
+        </div>
+        <span class="text-lg font-bold"><span class="text-white">Worth</span><span class="text-blue-400">ify</span></span>
+      </div>
+    </div>
+
+    <nav class="flex-1 p-4 space-y-1">
+      <div class="text-xs text-slate-600 uppercase tracking-widest px-3 mb-3">Intelligence</div>
+      <a href="#" onclick="switchTab('analyze')" id="tab-analyze" class="sidebar-link active">
+        <i class="fas fa-search-dollar w-5"></i> Analyze Product
+      </a>
+      <a href="#" onclick="switchTab('history')" id="tab-history" class="sidebar-link">
+        <i class="fas fa-history w-5"></i> Search History
+      </a>
+      <a href="#" onclick="switchTab('stats')" id="tab-stats" class="sidebar-link">
+        <i class="fas fa-chart-bar w-5"></i> My Analytics
+      </a>
+
+      <div class="text-xs text-slate-600 uppercase tracking-widest px-3 mb-3 mt-6">Info</div>
+      <a href="#" onclick="switchTab('about')" id="tab-about" class="sidebar-link">
+        <i class="fas fa-info-circle w-5"></i> How It Works
+      </a>
+    </nav>
+
+    <div class="p-4 border-t border-slate-800/60">
+      <div class="flex items-center gap-3 px-3 py-3 rounded-xl bg-slate-800/50 mb-3">
+        <div class="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-xs font-bold" id="user-avatar">U</div>
+        <div class="flex-1 min-w-0">
+          <div class="text-sm font-medium text-white truncate" id="sidebar-username">User</div>
+          <div class="text-xs text-slate-500 truncate" id="sidebar-email">user@email.com</div>
+        </div>
+      </div>
+      <button onclick="handleLogout()" class="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-slate-400 hover:text-red-400 hover:bg-red-500/10 text-sm transition-all">
+        <i class="fas fa-sign-out-alt w-4"></i> Sign Out
+      </button>
+    </div>
+  </aside>
+
+  <!-- Main Content -->
+  <main class="flex-1 ml-64 min-h-screen">
+    <!-- Top bar -->
+    <header class="sticky top-0 z-30 bg-slate-950/90 backdrop-blur-xl border-b border-slate-800/60 px-8 py-4 flex items-center justify-between">
+      <div>
+        <h1 class="text-lg font-bold text-white" id="page-title">Analyze Product</h1>
+        <p class="text-xs text-slate-500" id="page-subtitle">Enter any product to get your Worthify intelligence report</p>
+      </div>
+      <div class="flex items-center gap-3">
+        <div class="live-badge">
+          <span class="live-dot"></span> LIVE
+        </div>
+        <div class="text-xs text-slate-500 font-mono" id="clock">--:--:--</div>
+      </div>
+    </header>
+
+    <!-- ── ANALYZE TAB ── -->
+    <div id="tab-content-analyze" class="p-8 space-y-8">
+      <!-- Search Box -->
+      <div class="relative max-w-3xl">
+        <div class="search-container">
+          <i class="fas fa-search absolute left-5 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
+          <input id="search-input" type="text" placeholder="Enter product name (e.g. iPhone 15, Nike Air Force 1, Samsung TV...)"
+            class="search-input" onkeydown="if(event.key==='Enter')runAnalysis()" />
+          <button onclick="runAnalysis()" id="analyze-btn"
+            class="absolute right-2 top-1/2 -translate-y-1/2 px-6 py-2.5 bg-blue-600 hover:bg-blue-500 rounded-lg text-sm font-medium transition-all">
+            <span id="analyze-btn-text"><i class="fas fa-bolt mr-1"></i>Analyze</span>
+            <span id="analyze-loading" class="hidden"><i class="fas fa-spinner fa-spin"></i> Scanning...</span>
+          </button>
+        </div>
+        <div class="mt-2 flex flex-wrap gap-2">
+          <span class="text-xs text-slate-600">Try:</span>
+          <button onclick="quickSearch('iPhone 15')" class="quick-pill">iPhone 15</button>
+          <button onclick="quickSearch('Nike Air Force 1')" class="quick-pill">Nike Air Force 1</button>
+          <button onclick="quickSearch('Samsung Galaxy S24')" class="quick-pill">Samsung S24</button>
+          <button onclick="quickSearch('Sony WH-1000XM5')" class="quick-pill">Sony WH-1000XM5</button>
+          <button onclick="quickSearch('Dell XPS 15')" class="quick-pill">Dell XPS 15</button>
+        </div>
+      </div>
+
+      <!-- Idle State -->
+      <div id="idle-state" class="py-16 text-center">
+        <div class="w-20 h-20 rounded-2xl bg-gradient-to-br from-blue-500/20 to-slate-800 flex items-center justify-center mx-auto mb-6">
+          <i class="fas fa-brain text-blue-400 text-3xl"></i>
+        </div>
+        <h3 class="text-xl font-bold text-white mb-3">Ready to Analyze</h3>
+        <p class="text-slate-400 max-w-md mx-auto text-sm">Enter any product name above. Worthify will scan Amazon, Flipkart, Myntra, and Google Shopping simultaneously — then deliver your intelligence report.</p>
+        <div class="mt-8 grid grid-cols-2 md:grid-cols-4 gap-4 max-w-2xl mx-auto">
+          <div class="idle-platform-card"><i class="fab fa-amazon text-orange-400 text-xl mb-2"></i><span class="text-xs text-slate-400">Amazon</span></div>
+          <div class="idle-platform-card"><i class="fas fa-shopping-bag text-blue-400 text-xl mb-2"></i><span class="text-xs text-slate-400">Flipkart</span></div>
+          <div class="idle-platform-card"><i class="fas fa-tshirt text-pink-400 text-xl mb-2"></i><span class="text-xs text-slate-400">Myntra</span></div>
+          <div class="idle-platform-card"><i class="fab fa-google text-green-400 text-xl mb-2"></i><span class="text-xs text-slate-400">Google</span></div>
+        </div>
+      </div>
+
+      <!-- Loading State -->
+      <div id="loading-state" class="hidden py-16 text-center">
+        <div class="w-20 h-20 rounded-2xl bg-blue-500/10 border border-blue-500/30 flex items-center justify-center mx-auto mb-6 animate-pulse">
+          <i class="fas fa-satellite-dish text-blue-400 text-3xl"></i>
+        </div>
+        <h3 class="text-xl font-bold text-white mb-3">Scanning Platforms...</h3>
+        <div class="space-y-2 max-w-xs mx-auto text-sm">
+          <div class="scan-step" id="scan-1">
+            <i class="fab fa-amazon text-orange-400"></i> Scanning Amazon...
+          </div>
+          <div class="scan-step" id="scan-2">
+            <i class="fas fa-shopping-bag text-blue-400"></i> Scanning Flipkart...
+          </div>
+          <div class="scan-step" id="scan-3">
+            <i class="fas fa-tshirt text-pink-400"></i> Scanning Myntra...
+          </div>
+          <div class="scan-step" id="scan-4">
+            <i class="fab fa-google text-green-400"></i> Scanning Google Shopping...
+          </div>
+          <div class="scan-step" id="scan-5">
+            <i class="fas fa-brain text-purple-400"></i> Running NLP Analysis...
+          </div>
+        </div>
+      </div>
+
+      <!-- Results Section -->
+      <div id="results-section" class="hidden space-y-6">
+        <!-- Verdict Banner -->
+        <div id="verdict-banner" class="verdict-banner"></div>
+
+        <!-- Top Row: Quality Score + Price Intel + Sentiment -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <!-- Quality Score -->
+          <div class="metric-card">
+            <div class="flex items-center justify-between mb-4">
+              <div>
+                <div class="text-xs text-slate-500 uppercase tracking-widest">Quality Score</div>
+                <div class="text-4xl font-black mt-1">
+                  <span id="quality-score-val" class="text-white">--</span>
+                  <span class="text-lg text-slate-500">/100</span>
+                </div>
+              </div>
+              <div class="w-16 h-16 relative">
+                <svg class="w-full h-full -rotate-90" viewBox="0 0 36 36">
+                  <circle cx="18" cy="18" r="15" fill="none" stroke="#1e293b" stroke-width="3"/>
+                  <circle id="quality-circle" cx="18" cy="18" r="15" fill="none" stroke="#3b82f6" stroke-width="3"
+                    stroke-dasharray="94.2" stroke-dashoffset="94.2" stroke-linecap="round"/>
+                </svg>
+                <div class="absolute inset-0 flex items-center justify-center text-xs font-bold text-blue-400" id="quality-mini">-</div>
+              </div>
+            </div>
+            <div class="h-2 bg-slate-800 rounded-full overflow-hidden">
+              <div id="quality-bar" class="h-full rounded-full transition-all duration-1000 bg-gradient-to-r from-blue-600 to-blue-400" style="width:0%"></div>
+            </div>
+            <div class="mt-2 text-xs text-slate-500">Composite NLP + Ratings + Market Score</div>
+          </div>
+
+          <!-- Price Intelligence -->
+          <div class="metric-card">
+            <div class="text-xs text-slate-500 uppercase tracking-widest mb-3">Price Intelligence</div>
+            <div class="space-y-2.5">
+              <div class="flex justify-between items-center">
+                <span class="text-slate-400 text-xs">Lowest Price</span>
+                <span class="font-bold text-green-400 text-sm" id="price-min">--</span>
+              </div>
+              <div class="flex justify-between items-center">
+                <span class="text-slate-400 text-xs">Average Price</span>
+                <span class="font-bold text-white text-sm" id="price-avg">--</span>
+              </div>
+              <div class="flex justify-between items-center">
+                <span class="text-slate-400 text-xs">Highest Price</span>
+                <span class="font-bold text-slate-300 text-sm" id="price-max">--</span>
+              </div>
+              <div class="flex justify-between items-center">
+                <span class="text-slate-400 text-xs">Avg. Savings</span>
+                <span class="font-bold text-amber-400 text-sm" id="price-savings">--</span>
+              </div>
+              <div class="pt-1 border-t border-slate-800">
+                <span class="text-xs" id="market-parity-badge">--</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Sentiment Summary -->
+          <div class="metric-card">
+            <div class="text-xs text-slate-500 uppercase tracking-widest mb-3">Sentiment Analysis</div>
+            <div class="space-y-2.5">
+              <div>
+                <div class="flex justify-between text-xs mb-1">
+                  <span class="text-green-400"><i class="fas fa-smile mr-1"></i>Positive</span>
+                  <span class="text-green-400" id="pos-pct">--</span>
+                </div>
+                <div class="h-1.5 bg-slate-800 rounded-full"><div id="pos-bar" class="h-full bg-green-500 rounded-full" style="width:0%"></div></div>
+              </div>
+              <div>
+                <div class="flex justify-between text-xs mb-1">
+                  <span class="text-slate-400"><i class="fas fa-meh mr-1"></i>Neutral</span>
+                  <span class="text-slate-400" id="neu-pct">--</span>
+                </div>
+                <div class="h-1.5 bg-slate-800 rounded-full"><div id="neu-bar" class="h-full bg-slate-500 rounded-full" style="width:0%"></div></div>
+              </div>
+              <div>
+                <div class="flex justify-between text-xs mb-1">
+                  <span class="text-red-400"><i class="fas fa-frown mr-1"></i>Negative</span>
+                  <span class="text-red-400" id="neg-pct">--</span>
+                </div>
+                <div class="h-1.5 bg-slate-800 rounded-full"><div id="neg-bar" class="h-full bg-red-500 rounded-full" style="width:0%"></div></div>
+              </div>
+              <div class="pt-1 border-t border-slate-800 flex justify-between text-xs">
+                <span class="text-slate-500">Reviews Analyzed</span>
+                <span class="text-white font-bold" id="total-reviews">--</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Aspect Analysis -->
+        <div class="dash-card">
+          <h3 class="text-sm font-bold text-white mb-4 flex items-center gap-2">
+            <i class="fas fa-layer-group text-blue-400"></i> Aspect Analysis
+          </h3>
+          <div id="aspects-grid" class="grid grid-cols-2 md:grid-cols-3 gap-3"></div>
+        </div>
+
+        <!-- Live Telemetry Grid -->
+        <div class="dash-card overflow-hidden">
+          <h3 class="text-sm font-bold text-white mb-4 flex items-center gap-2">
+            <i class="fas fa-table text-blue-400"></i> Live Telemetry Grid
+            <span class="ml-auto text-xs text-slate-500 font-normal" id="telemetry-timestamp"></span>
+          </h3>
+          <div class="overflow-x-auto">
+            <table class="telemetry-table">
+              <thead>
+                <tr>
+                  <th>Platform</th>
+                  <th>Best Deal</th>
+                  <th>Min Price</th>
+                  <th>Avg Price</th>
+                  <th>Max Price</th>
+                  <th>Avg Rating</th>
+                  <th>Products</th>
+                </tr>
+              </thead>
+              <tbody id="telemetry-body"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Chart Row -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div class="dash-card">
+            <h3 class="text-sm font-bold text-white mb-4 flex items-center gap-2">
+              <i class="fas fa-chart-bar text-blue-400"></i> Price Comparison
+            </h3>
+            <canvas id="priceChart" height="200"></canvas>
+          </div>
+          <div class="dash-card">
+            <h3 class="text-sm font-bold text-white mb-4 flex items-center gap-2">
+              <i class="fas fa-chart-pie text-purple-400"></i> Sentiment Distribution
+            </h3>
+            <canvas id="sentimentChart" height="200"></canvas>
+          </div>
+        </div>
+
+        <!-- Product Cards Grid -->
+        <div class="dash-card">
+          <h3 class="text-sm font-bold text-white mb-4 flex items-center gap-2">
+            <i class="fas fa-boxes text-blue-400"></i> Product Overview
+          </h3>
+          <div id="products-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"></div>
+        </div>
+
+        <!-- Sentiment Snippets -->
+        <div class="dash-card">
+          <h3 class="text-sm font-bold text-white mb-4 flex items-center gap-2">
+            <i class="fas fa-quote-left text-blue-400"></i> Sentiment Snippets
+            <span class="ml-2 text-xs text-slate-500">Representative customer voices</span>
+          </h3>
+          <div id="snippets-grid" class="grid grid-cols-1 md:grid-cols-2 gap-3"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── HISTORY TAB ── -->
+    <div id="tab-content-history" class="hidden p-8">
+      <div class="max-w-3xl">
+        <h3 class="text-lg font-bold text-white mb-6">Search History</h3>
+        <div id="history-list" class="space-y-3">
+          <div class="text-slate-500 text-sm py-8 text-center">
+            <i class="fas fa-clock text-2xl mb-3 block"></i>
+            No searches yet. Analyze a product to see history here.
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── STATS TAB ── -->
+    <div id="tab-content-stats" class="hidden p-8">
+      <h3 class="text-lg font-bold text-white mb-6">My Analytics</h3>
+      <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+        <div class="metric-card text-center">
+          <div class="text-3xl font-black text-blue-400" id="stat-total">0</div>
+          <div class="text-xs text-slate-500 mt-1">Total Analyses</div>
+        </div>
+        <div class="metric-card text-center">
+          <div class="text-3xl font-black text-green-400" id="stat-buy">0</div>
+          <div class="text-xs text-slate-500 mt-1">Buy Verdicts</div>
+        </div>
+        <div class="metric-card text-center">
+          <div class="text-3xl font-black text-amber-400" id="stat-wait">0</div>
+          <div class="text-xs text-slate-500 mt-1">Wait Verdicts</div>
+        </div>
+        <div class="metric-card text-center">
+          <div class="text-3xl font-black text-red-400" id="stat-avoid">0</div>
+          <div class="text-xs text-slate-500 mt-1">Avoid Verdicts</div>
+        </div>
+      </div>
+      <div class="dash-card max-w-md">
+        <h4 class="text-sm font-bold text-white mb-4">Verdict Distribution</h4>
+        <canvas id="statsChart" height="200"></canvas>
+      </div>
+    </div>
+
+    <!-- ── ABOUT TAB ── -->
+    <div id="tab-content-about" class="hidden p-8 max-w-3xl">
+      <h3 class="text-lg font-bold text-white mb-6">How Worthify Works</h3>
+      <div class="space-y-4">
+        <div class="about-card">
+          <div class="about-icon bg-blue-500/15 text-blue-400"><i class="fas fa-spider"></i></div>
+          <div>
+            <h4 class="font-bold text-white">Multi-Platform Scraping</h4>
+            <p class="text-slate-400 text-sm mt-1">CloudScraper + rotating user agents bypass anti-bot systems on Amazon India, Flipkart, Myntra, and Google Shopping simultaneously.</p>
+          </div>
+        </div>
+        <div class="about-card">
+          <div class="about-icon bg-purple-500/15 text-purple-400"><i class="fas fa-brain"></i></div>
+          <div>
+            <h4 class="font-bold text-white">VADER + TextBlob Hybrid NLP</h4>
+            <p class="text-slate-400 text-sm mt-1">VADER (Valence Aware Dictionary for Sentiment Reasoning) combined with TextBlob polarity analysis processes each review with 60/40 hybrid weighting, augmented by domain-specific keyword signals.</p>
+          </div>
+        </div>
+        <div class="about-card">
+          <div class="about-icon bg-green-500/15 text-green-400"><i class="fas fa-calculator"></i></div>
+          <div>
+            <h4 class="font-bold text-white">Quality Score Formula</h4>
+            <p class="text-slate-400 text-sm mt-1">Quality Score = Sentiment(45%) + Ratings(35%) + PriceStability(20%). Boosted by high positive review ratio. Scale: 0–100.</p>
+          </div>
+        </div>
+        <div class="about-card">
+          <div class="about-icon bg-amber-500/15 text-amber-400"><i class="fas fa-gavel"></i></div>
+          <div>
+            <h4 class="font-bold text-white">Verdict Logic</h4>
+            <p class="text-slate-400 text-sm mt-1">Score ≥75 + &lt;25% negative → ✅ Buy Now. Score ≥58 → ⏳ Wait. Score ≥42 → 🤔 Consider Alternatives. Below → 🚫 Avoid.</p>
+          </div>
+        </div>
+        <div class="about-card">
+          <div class="about-icon bg-rose-500/15 text-rose-400"><i class="fas fa-shield-halved"></i></div>
+          <div>
+            <h4 class="font-bold text-white">Security Architecture</h4>
+            <p class="text-slate-400 text-sm mt-1">JWT RS256 tokens with 24h expiry, bcrypt password hashing (salt rounds 12), CORS protection, and zero password storage in plaintext.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<!-- Toast Notification -->
+<div id="toast" class="fixed bottom-6 right-6 z-[100] transition-all duration-300 translate-y-4 opacity-0 pointer-events-none">
+  <div class="flex items-center gap-3 px-5 py-3.5 rounded-xl shadow-2xl text-sm font-medium min-w-[240px]"
+       id="toast-inner"
+       style="background:rgba(30,41,59,0.98); border:1px solid rgba(51,65,85,0.6); backdrop-filter:blur(20px);">
+    <i id="toast-icon" class="text-base"></i>
+    <span id="toast-msg">Notification</span>
+  </div>
+</div>
+
+<!-- Mobile menu toggle -->
+<button id="mobile-menu-btn" class="fixed top-4 left-4 z-50 md:hidden w-10 h-10 bg-slate-800 rounded-xl flex items-center justify-center lg:hidden" style="display:none">
+  <i class="fas fa-bars text-white"></i>
+</button>
+
+<script src="/app.js"></script>
+</body>
+</html>

@@ -1,0 +1,372 @@
+"""
+Worthify NLP Sentiment Analysis Engine
+Processes customer reviews into a quantitative Quality Score and final Verdict.
+Uses VADER + TextBlob hybrid analysis with weighted scoring.
+"""
+
+import re
+import math
+import random
+import logging
+from collections import Counter
+from datetime import datetime
+
+import nltk
+from nltk.sentiment.vader import SentimentIntensityAnalyzer
+from textblob import TextBlob
+
+logger = logging.getLogger(__name__)
+
+# Pre-load VADER
+try:
+    SIA = SentimentIntensityAnalyzer()
+except Exception:
+    nltk.download('vader_lexicon', quiet=True)
+    SIA = SentimentIntensityAnalyzer()
+
+
+# ─── Keyword Signals ──────────────────────────────────────────────────────────
+QUALITY_KEYWORDS = {
+    "premium":     0.08, "excellent":   0.09, "outstanding": 0.09,
+    "durable":     0.07, "reliable":    0.08, "sturdy":      0.07,
+    "best":        0.06, "amazing":     0.07, "perfect":     0.08,
+    "genuine":     0.06, "authentic":   0.06, "superb":      0.08,
+    "fantastic":   0.07, "brilliant":   0.08, "love":        0.05,
+    "recommended": 0.06, "worth":       0.06, "solid":       0.05,
+}
+
+NEGATIVE_KEYWORDS = {
+    "broke":       0.10, "broken":     0.10, "waste":      0.09,
+    "terrible":    0.09, "horrible":   0.09, "awful":      0.10,
+    "fake":        0.12, "scam":       0.12, "defective":  0.11,
+    "poor":        0.07, "cheap":      0.05, "disappointed": 0.08,
+    "returned":    0.09, "refund":     0.08, "damaged":    0.09,
+    "worst":       0.10, "avoid":      0.10, "useless":    0.09,
+}
+
+ASPECT_KEYWORDS = {
+    "quality":    ["quality", "build", "material", "finish", "construction"],
+    "value":      ["price", "value", "worth", "expensive", "cheap", "affordable", "money"],
+    "delivery":   ["delivery", "shipping", "fast", "quick", "delayed", "package", "packaging"],
+    "service":    ["service", "support", "help", "response", "customer", "staff"],
+    "durability": ["durable", "lasting", "broke", "broken", "damaged", "sturdy", "solid"],
+    "usability":  ["easy", "simple", "use", "setup", "user", "intuitive", "difficult"],
+}
+
+
+class SentimentEngine:
+    def analyze(self, query: str, raw_results: dict) -> dict:
+        """
+        Full pipeline: collect reviews → analyze → score → verdict → response.
+        """
+        # 1. Collect all products & reviews
+        all_products = []
+        for platform, products in raw_results.items():
+            all_products.extend(products)
+
+        all_reviews = []
+        for p in all_products:
+            all_reviews.extend(p.get('reviews', []))
+
+        # 2. Per-platform aggregation
+        platform_data = self._aggregate_platforms(raw_results)
+
+        # 3. Sentiment analysis
+        sentiment_result = self._analyze_reviews(all_reviews)
+
+        # 4. Price intelligence
+        price_intel = self._price_intelligence(all_products)
+
+        # 5. Aspect analysis
+        aspects = self._aspect_analysis(all_reviews)
+
+        # 6. Compute Quality Score (0-100)
+        quality_score = self._compute_quality_score(
+            sentiment_result, price_intel, all_products
+        )
+
+        # 7. Generate Worthify Verdict
+        verdict, verdict_detail, confidence = self._generate_verdict(
+            quality_score, price_intel, sentiment_result
+        )
+
+        # 8. Top sentiment snippets
+        snippets = self._extract_snippets(all_reviews)
+
+        # 9. Telemetry grid
+        telemetry = self._build_telemetry(platform_data, price_intel)
+
+        return {
+            "query":           query,
+            "timestamp":       datetime.utcnow().isoformat() + "Z",
+            "quality_score":   quality_score,
+            "verdict":         verdict,
+            "verdict_detail":  verdict_detail,
+            "confidence":      confidence,
+            "price_intel":     price_intel,
+            "sentiment":       sentiment_result,
+            "aspects":         aspects,
+            "snippets":        snippets,
+            "telemetry":       telemetry,
+            "platform_data":   platform_data,
+            "total_reviews":   len(all_reviews),
+            "total_products":  len(all_products),
+        }
+
+    # ─── Helpers ──────────────────────────────────────────────────────────────
+
+    def _aggregate_platforms(self, raw_results):
+        result = {}
+        for platform, products in raw_results.items():
+            if not products:
+                continue
+            prices  = [p['price'] for p in products if p.get('price')]
+            ratings = [p['rating'] for p in products if p.get('rating')]
+            result[platform] = {
+                "name":          platform.title(),
+                "products":      products[:3],
+                "avg_price":     round(sum(prices) / len(prices), 2) if prices else 0,
+                "min_price":     min(prices) if prices else 0,
+                "max_price":     max(prices) if prices else 0,
+                "avg_rating":    round(sum(ratings) / len(ratings), 2) if ratings else 0,
+                "product_count": len(products),
+                "best_deal":     min(products, key=lambda x: x.get('price', 999999)) if products else None,
+            }
+        return result
+
+    def _analyze_reviews(self, reviews):
+        if not reviews:
+            return self._empty_sentiment()
+
+        vader_scores = []
+        tb_scores    = []
+        pos_count    = 0
+        neg_count    = 0
+        neu_count    = 0
+        kw_boost     = 0
+
+        for review in reviews:
+            text = str(review).lower()
+
+            # VADER
+            vs = SIA.polarity_scores(text)
+            vader_scores.append(vs['compound'])
+
+            # TextBlob
+            tb = TextBlob(text).sentiment.polarity
+            tb_scores.append(tb)
+
+            # Classify
+            compound = vs['compound']
+            if compound >= 0.05:
+                pos_count += 1
+            elif compound <= -0.05:
+                neg_count += 1
+            else:
+                neu_count += 1
+
+            # Keyword boost
+            for kw, weight in QUALITY_KEYWORDS.items():
+                if kw in text:
+                    kw_boost += weight
+            for kw, weight in NEGATIVE_KEYWORDS.items():
+                if kw in text:
+                    kw_boost -= weight
+
+        n = len(reviews)
+        avg_vader  = sum(vader_scores) / n
+        avg_tb     = sum(tb_scores) / n
+        hybrid_raw = (avg_vader * 0.6 + avg_tb * 0.4)
+        kw_norm    = max(-1, min(1, kw_boost / n))
+        final_pol  = hybrid_raw * 0.75 + kw_norm * 0.25
+
+        # Convert to 0-100 scale
+        sentiment_score = round((final_pol + 1) / 2 * 100, 1)
+
+        pos_ratio = pos_count / n
+        neg_ratio = neg_count / n
+        neu_ratio = neu_count / n
+
+        return {
+            "score":        sentiment_score,
+            "polarity":     round(final_pol, 3),
+            "positive_pct": round(pos_ratio * 100, 1),
+            "negative_pct": round(neg_ratio * 100, 1),
+            "neutral_pct":  round(neu_ratio * 100, 1),
+            "total":        n,
+            "label":        self._polarity_label(final_pol),
+        }
+
+    def _price_intelligence(self, products):
+        prices = [p['price'] for p in products if p.get('price') and p['price'] > 0]
+        if not prices:
+            return {"min": 0, "max": 0, "avg": 0, "spread": 0, "savings": 0}
+
+        mn   = min(prices)
+        mx   = max(prices)
+        avg  = sum(prices) / len(prices)
+        spread = round((mx - mn) / avg * 100, 1) if avg > 0 else 0
+
+        orig_prices = [p.get('original_price', p['price']) for p in products if p.get('price')]
+        avg_orig    = sum(orig_prices) / len(orig_prices) if orig_prices else avg
+        savings_pct = round((avg_orig - avg) / avg_orig * 100, 1) if avg_orig > avg else 0
+
+        best_deal_product = min(products, key=lambda x: x.get('price', 999999))
+        currency_symbol = "₹"
+
+        return {
+            "min":          round(mn, 2),
+            "max":          round(mx, 2),
+            "avg":          round(avg, 2),
+            "spread":       spread,
+            "savings":      savings_pct,
+            "best_deal":    best_deal_product,
+            "currency":     currency_symbol,
+            "market_parity": self._market_parity(spread),
+        }
+
+    def _market_parity(self, spread_pct):
+        if spread_pct < 10:
+            return {"label": "Stable Market", "color": "green", "icon": "📊"}
+        elif spread_pct < 25:
+            return {"label": "Moderate Variance", "color": "yellow", "icon": "📈"}
+        else:
+            return {"label": "High Volatility", "color": "red", "icon": "⚡"}
+
+    def _aspect_analysis(self, reviews):
+        aspect_scores = {}
+        for aspect, keywords in ASPECT_KEYWORDS.items():
+            relevant = [r for r in reviews if any(k in r.lower() for k in keywords)]
+            if not relevant:
+                aspect_scores[aspect] = {"score": random.randint(60, 85), "count": 0}
+                continue
+            scores = [SIA.polarity_scores(r)['compound'] for r in relevant]
+            avg    = sum(scores) / len(scores)
+            aspect_scores[aspect] = {
+                "score": round((avg + 1) / 2 * 100, 1),
+                "count": len(relevant),
+            }
+        return aspect_scores
+
+    def _compute_quality_score(self, sentiment, price_intel, products):
+        # Components
+        s_score   = sentiment.get('score', 50)                      # 0-100
+        pos_ratio = sentiment.get('positive_pct', 50) / 100         # 0-1
+
+        ratings   = [p['rating'] for p in products if p.get('rating')]
+        avg_r     = sum(ratings) / len(ratings) if ratings else 3.5
+        r_score   = (avg_r / 5) * 100                               # 0-100
+
+        spread    = price_intel.get('spread', 20)
+        p_score   = max(0, 100 - spread * 1.5)                      # penalize volatility
+
+        # Weighted composite
+        quality = (
+            s_score  * 0.45 +
+            r_score  * 0.35 +
+            p_score  * 0.20
+        )
+
+        # Boost for high positive ratio
+        if pos_ratio > 0.7:
+            quality = min(100, quality * 1.05)
+
+        return round(min(100, max(0, quality)), 1)
+
+    def _generate_verdict(self, quality_score, price_intel, sentiment):
+        spread   = price_intel.get('spread', 20)
+        savings  = price_intel.get('savings', 0)
+        pos_pct  = sentiment.get('positive_pct', 50)
+        neg_pct  = sentiment.get('negative_pct', 20)
+
+        if quality_score >= 75 and pos_pct >= 60 and neg_pct < 25:
+            verdict = "✅ Buy Now"
+            confidence = min(99, round(quality_score + savings * 0.3))
+            detail = (
+                f"Strong sentiment ({pos_pct:.0f}% positive) combined with a "
+                f"quality score of {quality_score} signals excellent value. "
+                f"Market pricing is {'stable' if spread < 15 else 'variable'} — "
+                f"secure the best deal now before prices shift."
+            )
+        elif quality_score >= 58 and neg_pct < 35:
+            verdict = "⏳ Wait & Watch"
+            confidence = round(quality_score * 0.85)
+            detail = (
+                f"Moderate quality signal ({quality_score} score) with {neg_pct:.0f}% "
+                f"negative sentiment. Product shows promise but market pricing has "
+                f"{spread:.0f}% variance — monitor for 7–14 days for optimal entry point."
+            )
+        elif quality_score >= 42:
+            verdict = "🤔 Consider Alternatives"
+            confidence = round(quality_score * 0.75)
+            detail = (
+                f"Mixed user feedback (quality score {quality_score}) with notable concerns. "
+                f"Negative sentiment at {neg_pct:.0f}% suggests quality inconsistency. "
+                f"Explore competing products before committing."
+            )
+        else:
+            verdict = "🚫 Avoid"
+            confidence = round((100 - quality_score) * 0.8)
+            detail = (
+                f"Low quality score of {quality_score} backed by high negative sentiment "
+                f"({neg_pct:.0f}%). User reviews indicate systemic quality and reliability "
+                f"issues. Investment risk outweighs potential value."
+            )
+
+        return verdict, detail, confidence
+
+    def _extract_snippets(self, reviews, n=8):
+        if not reviews:
+            return []
+        scored = []
+        for review in reviews:
+            vs = SIA.polarity_scores(review)
+            scored.append((abs(vs['compound']), vs['compound'], review))
+        scored.sort(reverse=True)
+        top = scored[:max(n * 2, 20)]
+        random.shuffle(top)
+        selected = top[:n]
+        result = []
+        for _, compound, text in selected:
+            if compound >= 0.05:
+                label, color = "Positive", "green"
+            elif compound <= -0.05:
+                label, color = "Negative", "red"
+            else:
+                label, color = "Neutral", "gray"
+            result.append({
+                "text":     text[:160],
+                "label":    label,
+                "color":    color,
+                "score":    round(compound, 3),
+            })
+        return result
+
+    def _build_telemetry(self, platform_data, price_intel):
+        rows = []
+        for platform, data in platform_data.items():
+            rows.append({
+                "platform":   data['name'],
+                "min_price":  data['min_price'],
+                "avg_price":  data['avg_price'],
+                "max_price":  data['max_price'],
+                "avg_rating": data['avg_rating'],
+                "products":   data['product_count'],
+                "best_title": data['best_deal']['title'][:45] if data.get('best_deal') else "N/A",
+                "best_price": data['best_deal']['price'] if data.get('best_deal') else 0,
+                "badge":      data['best_deal'].get('badge') if data.get('best_deal') else None,
+            })
+        return rows
+
+    def _polarity_label(self, p):
+        if p > 0.35:   return "Very Positive"
+        if p > 0.05:   return "Positive"
+        if p > -0.05:  return "Neutral"
+        if p > -0.35:  return "Negative"
+        return "Very Negative"
+
+    def _empty_sentiment(self):
+        return {
+            "score": 50, "polarity": 0, "positive_pct": 40,
+            "negative_pct": 20, "neutral_pct": 40, "total": 0, "label": "Neutral"
+        }

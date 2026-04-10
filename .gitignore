@@ -1,0 +1,15 @@
+__pycache__/
+*.pyc
+*.pyo
+.env
+.env.local
+node_modules/
+.wrangler/
+dist/
+*.log
+.pm2/
+*.tar.gz
+*.zip
+.DS_Store
+venv/
+.venv/
