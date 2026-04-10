@@ -4,6 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Worthify — AI-Powered Purchase Intelligence</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%233b82f6'/><text y='.9em' font-size='70' x='12'>🧠</text></svg>" />
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
@@ -559,11 +560,11 @@
                 <span class="font-bold text-white text-sm" id="price-avg">--</span>
               </div>
               <div class="flex justify-between items-center">
-                <span class="text-slate-400 text-xs">Highest Price</span>
+                <span class="text-slate-400 text-xs">MRP / List Price</span>
                 <span class="font-bold text-slate-300 text-sm" id="price-max">--</span>
               </div>
               <div class="flex justify-between items-center">
-                <span class="text-slate-400 text-xs">Avg. Savings</span>
+                <span class="text-slate-400 text-xs">Savings vs MRP</span>
                 <span class="font-bold text-amber-400 text-sm" id="price-savings">--</span>
               </div>
               <div class="pt-1 border-t border-slate-800">
@@ -625,11 +626,11 @@
                 <tr>
                   <th>Platform</th>
                   <th>Best Deal</th>
-                  <th>Min Price</th>
+                  <th class="text-green-400">Best Price</th>
                   <th>Avg Price</th>
-                  <th>Max Price</th>
-                  <th>Avg Rating</th>
-                  <th>Products</th>
+                  <th>MRP</th>
+                  <th>Rating</th>
+                  <th>Delivery</th>
                 </tr>
               </thead>
               <tbody id="telemetry-body"></tbody>
@@ -653,10 +654,14 @@
           </div>
         </div>
 
+        <!-- Product Meta Bar -->
+        <div id="product-meta-bar" class="hidden px-4 py-3 bg-slate-800/60 border border-slate-700/50 rounded-xl text-xs"></div>
+
         <!-- Product Cards Grid -->
         <div class="dash-card">
           <h3 class="text-sm font-bold text-white mb-4 flex items-center gap-2">
             <i class="fas fa-boxes text-blue-400"></i> Product Overview
+            <span class="ml-2 text-xs text-slate-500 font-normal">Sorted by price • click to view on platform</span>
           </h3>
           <div id="products-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"></div>
         </div>

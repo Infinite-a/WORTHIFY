@@ -106,7 +106,15 @@ def analyze():
         # 2. Run sentiment analysis on collected reviews
         analysis    = sentiment_engine.analyze(query, raw_results)
 
-        # 3. Store in history
+        # 3. Attach product meta if available (from first listing)
+        for platform_data in raw_results.values():
+            if platform_data:
+                meta = platform_data[0].get('_product_meta')
+                if meta:
+                    analysis['product_meta'] = meta
+                    break
+
+        # 4. Store in history
         if email in SEARCH_HISTORY:
             SEARCH_HISTORY[email].insert(0, {
                 'query': query,

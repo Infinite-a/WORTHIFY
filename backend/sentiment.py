@@ -117,20 +117,31 @@ class SentimentEngine:
 
     def _aggregate_platforms(self, raw_results):
         result = {}
+        PLATFORM_DISPLAY = {
+            'amazon':  'Amazon', 'flipkart': 'Flipkart',
+            'myntra':  'Myntra', 'jiomart': 'JioMart',
+            'google':  'Google Shopping',
+        }
         for platform, products in raw_results.items():
             if not products:
                 continue
-            prices  = [p['price'] for p in products if p.get('price')]
-            ratings = [p['rating'] for p in products if p.get('rating')]
+            prices  = [p['price'] for p in products if p.get('price') and p['price'] > 0]
+            ratings = [p['rating'] for p in products if p.get('rating') and p['rating'] > 0]
+            if not prices:
+                continue
+            best = min(products, key=lambda x: x.get('price', 999_999_999))
+            display_name = PLATFORM_DISPLAY.get(platform.lower(), platform.title())
             result[platform] = {
-                "name":          platform.title(),
+                "name":          display_name,
                 "products":      products[:3],
-                "avg_price":     round(sum(prices) / len(prices), 2) if prices else 0,
-                "min_price":     min(prices) if prices else 0,
-                "max_price":     max(prices) if prices else 0,
-                "avg_rating":    round(sum(ratings) / len(ratings), 2) if ratings else 0,
+                "avg_price":     round(sum(prices) / len(prices)),
+                "min_price":     min(prices),
+                "max_price":     max(prices),
+                "avg_rating":    round(sum(ratings) / len(ratings), 1) if ratings else 0,
                 "product_count": len(products),
-                "best_deal":     min(products, key=lambda x: x.get('price', 999999)) if products else None,
+                "best_deal":     best,
+                "mrp":           best.get('mrp', max(prices)),
+                "market_source": best.get('market_source', 'market_intelligence'),
             }
         return result
 
@@ -200,24 +211,28 @@ class SentimentEngine:
     def _price_intelligence(self, products):
         prices = [p['price'] for p in products if p.get('price') and p['price'] > 0]
         if not prices:
-            return {"min": 0, "max": 0, "avg": 0, "spread": 0, "savings": 0}
+            return {"min": 0, "max": 0, "avg": 0, "mrp": 0, "spread": 0, "savings": 0}
 
         mn   = min(prices)
         mx   = max(prices)
         avg  = sum(prices) / len(prices)
         spread = round((mx - mn) / avg * 100, 1) if avg > 0 else 0
 
-        orig_prices = [p.get('original_price', p['price']) for p in products if p.get('price')]
-        avg_orig    = sum(orig_prices) / len(orig_prices) if orig_prices else avg
-        savings_pct = round((avg_orig - avg) / avg_orig * 100, 1) if avg_orig > avg else 0
+        # Use actual MRP field when available
+        mrp_prices = [p.get('mrp', 0) for p in products if p.get('mrp', 0) > 0]
+        mrp = round(max(mrp_prices)) if mrp_prices else round(mx * 1.15)
 
-        best_deal_product = min(products, key=lambda x: x.get('price', 999999))
+        # Savings vs MRP
+        savings_pct = round((mrp - mn) / mrp * 100, 1) if mrp > mn else 0
+
+        best_deal_product = min(products, key=lambda x: x.get('price', 999_999_999))
         currency_symbol = "₹"
 
         return {
-            "min":          round(mn, 2),
-            "max":          round(mx, 2),
-            "avg":          round(avg, 2),
+            "min":          round(mn),
+            "max":          round(mx),
+            "avg":          round(avg),
+            "mrp":          mrp,
             "spread":       spread,
             "savings":      savings_pct,
             "best_deal":    best_deal_product,
@@ -345,17 +360,30 @@ class SentimentEngine:
     def _build_telemetry(self, platform_data, price_intel):
         rows = []
         for platform, data in platform_data.items():
+            best = data.get('best_deal', {})
+            mrp  = data.get('mrp') or data['max_price']
+            bp   = best.get('price', 0) if best else 0
+            disc = round((mrp - bp) / mrp * 100) if mrp and bp and mrp > bp else 0
             rows.append({
-                "platform":   data['name'],
-                "min_price":  data['min_price'],
-                "avg_price":  data['avg_price'],
-                "max_price":  data['max_price'],
-                "avg_rating": data['avg_rating'],
-                "products":   data['product_count'],
-                "best_title": data['best_deal']['title'][:45] if data.get('best_deal') else "N/A",
-                "best_price": data['best_deal']['price'] if data.get('best_deal') else 0,
-                "badge":      data['best_deal'].get('badge') if data.get('best_deal') else None,
+                "platform":      data['name'],
+                "min_price":     data['min_price'],
+                "avg_price":     data['avg_price'],
+                "max_price":     data['max_price'],
+                "mrp":           mrp,
+                "avg_rating":    data['avg_rating'],
+                "products":      data['product_count'],
+                "best_title":    best.get('title', 'N/A')[:50] if best else 'N/A',
+                "best_price":    bp,
+                "best_discount": f"{disc}%",
+                "delivery":      best.get('delivery', 'Check Platform') if best else 'Check Platform',
+                "in_stock":      best.get('in_stock', True) if best else True,
+                "badge":         best.get('badge') if best else None,
+                "url":           best.get('url', '#') if best else '#',
+                "seller":        best.get('seller', '') if best else '',
+                "market_source": data.get('market_source', 'market_intelligence'),
             })
+        # Sort by min_price ascending
+        rows.sort(key=lambda r: r['min_price'])
         return rows
 
     def _polarity_label(self, p):

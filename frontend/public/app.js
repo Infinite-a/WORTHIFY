@@ -261,9 +261,44 @@ function renderResults(data) {
   renderSentimentSummary(data.sentiment);
   renderAspects(data.aspects);
   renderTelemetry(data.telemetry, data.timestamp);
+  renderProductMeta(data.product_meta);
   renderCharts(data);
   renderProducts(data.platform_data);
   renderSnippets(data.snippets);
+}
+
+// Product Meta Banner
+function renderProductMeta(meta) {
+  if (!meta) return;
+  const el = document.getElementById('product-meta-bar');
+  if (!el) return;
+  const fmt = v => v ? `₹${Number(v).toLocaleString('en-IN', { maximumFractionDigits: 0 })}` : '';
+  const catIcons = {
+    smartphone: 'fa-mobile-screen', laptop: 'fa-laptop', tablet: 'fa-tablet-screen-button',
+    audio: 'fa-headphones', wearable: 'fa-watch', camera: 'fa-camera', tv: 'fa-tv',
+    gaming: 'fa-gamepad', appliance: 'fa-blender', default: 'fa-box'
+  };
+  const icon = catIcons[meta.category] || catIcons.default;
+  el.innerHTML = `
+    <div class="flex items-center gap-3 flex-wrap">
+      <div class="flex items-center gap-2">
+        <i class="fas ${icon} text-blue-400"></i>
+        <span class="text-sm font-semibold text-white capitalize">${meta.matched_key || ''}</span>
+        ${meta.brand !== 'unknown' ? `<span class="text-xs px-2 py-0.5 bg-blue-500/20 text-blue-300 rounded-full capitalize">${meta.brand}</span>` : ''}
+        <span class="text-xs px-2 py-0.5 bg-slate-700 text-slate-400 rounded-full capitalize">${meta.category}</span>
+      </div>
+      ${meta.mrp ? `<div class="flex items-center gap-2 ml-2">
+        <span class="text-xs text-slate-500">MRP:</span>
+        <span class="text-sm font-bold text-white price-mono">${fmt(meta.mrp)}</span>
+        <span class="text-xs text-green-400">• Market prices below MRP</span>
+      </div>` : ''}
+      <div class="ml-auto flex items-center gap-1.5 text-xs text-slate-500">
+        <span class="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse"></span>
+        Live FX: 1 USD = ₹${meta.inr_rate ? meta.inr_rate.toFixed(2) : '—'}
+      </div>
+    </div>
+  `;
+  el.classList.remove('hidden');
 }
 
 // Verdict Banner
@@ -308,11 +343,13 @@ function renderQualityScore(score) {
 
 // Price Intelligence
 function renderPriceIntel(pi) {
-  const fmt = v => `₹${Number(v).toLocaleString('en-IN', { maximumFractionDigits: 0 })}`;
+  const fmt = v => v ? `₹${Number(v).toLocaleString('en-IN', { maximumFractionDigits: 0 })}` : '—';
   setText('price-min', fmt(pi.min));
   setText('price-avg', fmt(pi.avg));
-  setText('price-max', fmt(pi.max));
-  setText('price-savings', `~${pi.savings}% avg discount`);
+  // Show MRP in the "max" slot (renamed to "MRP / List Price" in HTML)
+  setText('price-max', fmt(pi.mrp || pi.max));
+  setText('price-savings', `~${pi.savings || 0}% below MRP`);
+
   const mp = pi.market_parity || {};
   const colorMap = { green: 'text-green-400', yellow: 'text-amber-400', red: 'text-red-400' };
   const el = document.getElementById('market-parity-badge');
@@ -378,27 +415,42 @@ function renderTelemetry(telemetry, timestamp) {
     'Amazon':          '<i class="fab fa-amazon text-orange-400"></i>',
     'Flipkart':        '<i class="fas fa-shopping-bag text-blue-400"></i>',
     'Myntra':          '<i class="fas fa-tshirt text-pink-400"></i>',
+    'JioMart':         '<i class="fas fa-store text-green-400"></i>',
     'Google Shopping': '<i class="fab fa-google text-green-400"></i>',
   };
   tbody.innerHTML = telemetry.map(row => {
     const icon = platformIcons[row.platform] || '<i class="fas fa-store text-slate-400"></i>';
-    const stars = '★'.repeat(Math.round(row.avg_rating || 0));
-    const badge = row.badge ? `<span class="ml-2 px-1.5 py-0.5 bg-amber-500/20 text-amber-400 text-[10px] rounded">${row.badge}</span>` : '';
+    const starsN = Math.round(row.avg_rating || 0);
+    const stars = '★'.repeat(starsN) + '☆'.repeat(Math.max(0, 5 - starsN));
+    const badge = row.badge ? `<span class="ml-1 px-1.5 py-0.5 bg-amber-500/20 text-amber-400 text-[10px] rounded">${escapeHtml(row.badge)}</span>` : '';
+    const disc  = row.best_discount && row.best_discount !== '0%' ?
+      `<span class="ml-1 text-[10px] text-green-400 font-semibold">${row.best_discount} off</span>` : '';
+    const stock = row.in_stock ?
+      '<span class="text-[10px] text-green-400">● Stock</span>' :
+      '<span class="text-[10px] text-red-400">● OOS</span>';
+    const src_badge = row.market_source === 'live_scrape' ?
+      '<span class="ml-1 text-[9px] px-1 py-0.5 bg-green-500/20 text-green-400 rounded">LIVE</span>' :
+      '<span class="ml-1 text-[9px] px-1 py-0.5 bg-blue-500/20 text-blue-400 rounded">INTEL</span>';
     return `
-      <tr>
-        <td><div class="flex items-center gap-2">${icon}<span class="font-medium">${row.platform}</span></div></td>
-        <td class="max-w-[180px]">
-          <div class="truncate text-xs text-slate-300">${escapeHtml(row.best_title || '—')}</div>
-          <div class="font-bold text-green-400 text-sm price-mono">${fmt(row.best_price)}${badge}</div>
-        </td>
-        <td class="price-mono text-green-400 font-semibold">${fmt(row.min_price)}</td>
-        <td class="price-mono text-white">${fmt(row.avg_price)}</td>
-        <td class="price-mono text-slate-400">${fmt(row.max_price)}</td>
+      <tr class="cursor-pointer hover:bg-slate-800/40 transition-colors" onclick="window.open('${row.url || '#'}', '_blank')">
         <td>
-          <div class="stars text-xs">${stars}</div>
+          <div class="flex items-center gap-2">${icon}<span class="font-medium">${escapeHtml(row.platform)}</span>${src_badge}</div>
+        </td>
+        <td class="max-w-[200px]">
+          <div class="truncate text-xs text-slate-300 mb-1">${escapeHtml(row.best_title || '—')}</div>
+          <div class="font-bold text-green-400 text-sm price-mono">${fmt(row.best_price)}${disc}${badge}</div>
+        </td>
+        <td class="price-mono text-green-400 font-bold text-sm">${fmt(row.min_price)}</td>
+        <td class="price-mono text-white">${fmt(row.avg_price)}</td>
+        <td class="price-mono text-slate-400">${fmt(row.mrp || row.max_price)}</td>
+        <td>
+          <div class="stars text-xs text-amber-400">${stars}</div>
           <div class="text-xs text-slate-500">${row.avg_rating || '—'}/5</div>
         </td>
-        <td class="text-slate-400">${row.products}</td>
+        <td>
+          <div class="text-xs text-slate-400">${escapeHtml(row.delivery || '—')}</div>
+          <div class="mt-0.5">${stock}</div>
+        </td>
       </tr>
     `;
   }).join('');
@@ -497,10 +549,11 @@ function renderProducts(platformData) {
   if (!grid) return;
   const allProducts = [];
   const platformIcons = {
-    amazon: '<i class="fab fa-amazon text-orange-400"></i>',
+    amazon:   '<i class="fab fa-amazon text-orange-400"></i>',
     flipkart: '<i class="fas fa-shopping-bag text-blue-400"></i>',
-    myntra: '<i class="fas fa-tshirt text-pink-400"></i>',
-    google: '<i class="fab fa-google text-green-400"></i>',
+    myntra:   '<i class="fas fa-tshirt text-pink-400"></i>',
+    jiomart:  '<i class="fas fa-store text-green-400"></i>',
+    google:   '<i class="fab fa-google text-cyan-400"></i>',
   };
 
   Object.entries(platformData).forEach(([platform, pd]) => {
@@ -511,38 +564,53 @@ function renderProducts(platformData) {
     }
   });
 
-  grid.innerHTML = allProducts.slice(0, 9).map(p => {
-    const icon   = platformIcons[p._platform_key] || '<i class="fas fa-store text-slate-400"></i>';
-    const fmt    = v => v ? `₹${Number(v).toLocaleString('en-IN', { maximumFractionDigits: 0 })}` : '—';
-    const stars  = '★'.repeat(Math.round(p.rating || 0)) + '☆'.repeat(5 - Math.round(p.rating || 0));
-    const badge  = p.badge ? `<span class="px-2 py-0.5 bg-amber-500/20 text-amber-400 text-[10px] rounded-full font-medium">${p.badge}</span>` : '';
-    const stock  = p.in_stock ? '<span class="text-green-400 text-xs">● In Stock</span>' : '<span class="text-red-400 text-xs">● Out of Stock</span>';
-    const disc   = p.discount && p.discount !== '0%' ? `<span class="text-green-400 text-xs ml-1">${p.discount} off</span>` : '';
+  // Sort products by price ascending
+  allProducts.sort((a, b) => (a.price || 0) - (b.price || 0));
+
+  grid.innerHTML = allProducts.slice(0, 12).map(p => {
+    const pkey  = (p._platform_key || '').toLowerCase();
+    const icon  = platformIcons[pkey] || '<i class="fas fa-store text-slate-400"></i>';
+    const fmt   = v => v ? `₹${Number(v).toLocaleString('en-IN', { maximumFractionDigits: 0 })}` : '—';
+    const starsN = Math.round(p.rating || 0);
+    const stars  = '★'.repeat(starsN) + '☆'.repeat(Math.max(0, 5 - starsN));
+    const badge  = p.badge ? `<span class="px-1.5 py-0.5 bg-amber-500/20 text-amber-400 text-[9px] rounded-full font-medium">${escapeHtml(p.badge)}</span>` : '';
+    const stock  = p.in_stock ?
+      '<span class="text-green-400 text-[11px] font-medium">● In Stock</span>' :
+      '<span class="text-red-400 text-[11px]">● Out of Stock</span>';
+    const discPct = p.discount_pct || (p.mrp && p.price ? Math.round((p.mrp - p.price) / p.mrp * 100) : 0);
+    const discBadge = discPct > 2 ?
+      `<span class="text-[10px] font-bold text-white bg-green-600/80 px-1.5 py-0.5 rounded">${discPct}% OFF</span>` : '';
+    const mrpLine = p.mrp && p.mrp > p.price ?
+      `<span class="text-xs text-slate-500 line-through price-mono">${fmt(p.mrp)}</span>` : '';
+    const isLive = p.market_source === 'live_scrape';
+    const srcTag = isLive ?
+      '<span class="text-[9px] px-1 py-0.5 bg-green-500/20 text-green-400 rounded font-semibold">LIVE</span>' :
+      '<span class="text-[9px] px-1 py-0.5 bg-blue-500/20 text-blue-400 rounded">INTEL</span>';
 
     return `
-      <div class="product-card">
-        <div class="flex items-start justify-between gap-2 mb-3">
-          <div class="flex items-center gap-1.5 text-xs text-slate-500">
-            ${icon} ${(p.platform || p._platform_key).toUpperCase()}
+      <div class="product-card cursor-pointer" onclick="window.open('${escapeHtml(p.url || '#')}', '_blank')">
+        <div class="flex items-center justify-between gap-2 mb-2.5">
+          <div class="flex items-center gap-1.5 text-[11px] font-semibold text-slate-400 uppercase tracking-wide">
+            ${icon} ${escapeHtml(p.platform || pkey)}
           </div>
-          ${badge}
+          <div class="flex items-center gap-1">${badge}${srcTag}</div>
         </div>
-        <h4 class="text-sm font-semibold text-white mb-2 line-clamp-2 leading-snug">${escapeHtml(p.title || '—')}</h4>
-        <div class="flex items-baseline gap-2 mb-2">
+        <h4 class="text-sm font-semibold text-white mb-2.5 leading-snug" style="display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden">${escapeHtml(p.title || '—')}</h4>
+        <div class="flex items-baseline gap-2 mb-2 flex-wrap">
           <span class="text-xl font-black text-white price-mono">${fmt(p.price)}</span>
-          ${p.original_price > p.price ? `<span class="text-xs text-slate-500 line-through price-mono">${fmt(p.original_price)}</span>` : ''}
-          ${disc}
+          ${mrpLine}
+          ${discBadge}
         </div>
-        <div class="flex items-center justify-between">
-          <div>
-            <span class="stars text-xs">${stars}</span>
-            <span class="text-xs text-slate-500 ml-1">${p.rating} (${(p.review_count || 0).toLocaleString()})</span>
+        <div class="flex items-center justify-between mb-2">
+          <div class="flex items-center gap-1">
+            <span class="text-amber-400 text-xs">${stars}</span>
+            <span class="text-xs text-slate-500">${p.rating || 0} (${(p.review_count || 0).toLocaleString()})</span>
           </div>
           ${stock}
         </div>
-        <div class="mt-2 pt-2 border-t border-slate-700/50 flex items-center justify-between text-xs text-slate-500">
-          <span><i class="fas fa-truck mr-1 text-blue-500/70"></i>${p.delivery || '—'}</span>
-          <span>${p.seller || '—'}</span>
+        <div class="pt-2 border-t border-slate-700/50 flex items-center justify-between text-xs text-slate-500">
+          <span><i class="fas fa-truck mr-1 text-blue-500/60"></i>${escapeHtml(p.delivery || '—')}</span>
+          <span class="truncate max-w-[90px] text-right">${escapeHtml(p.seller || '—')}</span>
         </div>
       </div>
     `;
